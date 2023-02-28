@@ -15,4 +15,32 @@ public class Tao {
         model.addAttribute("company","Tao");
         return String.format("%s/home", prefix);
     }
+
+    @GetMapping({"/rebound"})
+    public String rebound(Model model){
+        model.addAttribute("title", "TradeInsight");
+        model.addAttribute("company","Tao");
+        return String.format("%s/rebound", prefix);
+    }
+
+    @GetMapping({"/recommend"})
+    public String recommend(Model model){
+        model.addAttribute("title", "TradeInsight");
+        model.addAttribute("company","Tao");
+        return String.format("%s/recommend", prefix);
+    }
+
+    @GetMapping({"/market-sentiment"})
+    public String marketSentiment(Model model){
+        model.addAttribute("title", "TradeInsight");
+        model.addAttribute("company","Tao");
+        return String.format("%s/market-sentiment", prefix);
+    }
+
+    @GetMapping({"/crypto-market"})
+    public String cryptoMarket(Model model){
+        model.addAttribute("title", "TradeInsight");
+        model.addAttribute("company","Tao");
+        return String.format("%s/crypto-market", prefix);
+    }
 }
