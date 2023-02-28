@@ -11,6 +11,8 @@ public class Tao {
     private final static String prefix = "tao-home";
     @GetMapping({"/","","index"})
     public String home(Model model){
+        model.addAttribute("title", "TradeInsight");
+        model.addAttribute("company","Tao");
         return String.format("%s/home", prefix);
     }
 }
