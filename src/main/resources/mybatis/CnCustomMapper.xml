@@ -1,0 +1,79 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tao.trade.infra.db.mapper.CnCustomMapper">
+    <resultMap id="BaseDailyMap" extends="com.tao.trade.infra.db.mapper.CnStockDailyMapper.BaseResultMap"
+               type="com.tao.trade.infra.db.model.CnStockDaily">
+    </resultMap>
+    <resultMap id="BaseStockInfoMap" extends="com.tao.trade.infra.db.mapper.CnStockInfoMapper.BaseResultMap"
+               type="com.tao.trade.infra.db.model.CnStockInfo">
+    </resultMap>
+
+    <select id="findNewBy" parameterType="com.tao.trade.infra.db.model.CnStockDailyExample" resultMap="BaseDailyMap">
+        select <include refid="com.tao.trade.infra.db.mapper.CnStockDailyMapper.Base_Column_List"/>
+        from public.cn_stock_daily
+        <if test="_parameter != null">
+            <include refid="com.tao.trade.infra.db.mapper.CnStockDailyMapper.Example_Where_Clause" />
+        </if>
+        order by trade_date desc LIMIT 1
+    </select>
+    <insert id="batchInsertUpdateBasic" parameterType="com.tao.trade.infra.db.model.CnStockInfo">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.cn_stock_info (status, symbol, name, industry,
+            market, exchange, list_date, create_date)
+            values (#{item.status,jdbcType=VARCHAR}, #{item.symbol,jdbcType=VARCHAR}, #{item.name,jdbcType=VARCHAR},
+            #{item.industry,jdbcType=VARCHAR}, #{item.market,jdbcType=VARCHAR}, #{item.exchange,jdbcType=VARCHAR},
+            #{item.listDate,jdbcType=DATE}, #{item.createDate,jdbcType=DATE}) ON CONFLICT(symbol) DO UPDATE SET status = #{item.status,jdbcType=VARCHAR}
+        </foreach>
+    </insert>
+    <insert id="batchInsertUpdateDaily" parameterType="com.tao.trade.infra.db.model.CnStockDaily">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.cn_stock_daily (symbol, name, close_price, open_price, low_price,
+            high_price, pre_close, change, pct_chg, vol, amount, profit, trade_date)
+            values (#{item.symbol,jdbcType=VARCHAR}, #{item.name,jdbcType=VARCHAR},
+            #{item.closePrice,jdbcType=NUMERIC}, #{item.openPrice,jdbcType=NUMERIC}, #{item.lowPrice,jdbcType=NUMERIC},
+            #{item.highPrice,jdbcType=NUMERIC}, #{item.preClose,jdbcType=NUMERIC}, #{item.change,jdbcType=NUMERIC},
+            #{item.pctChg,jdbcType=NUMERIC}, #{item.vol,jdbcType=NUMERIC}, #{item.amount,jdbcType=NUMERIC},
+            #{item.profit,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(symbol,trade_date) DO NOTHING
+        </foreach>
+    </insert>
+    <insert id="batchInsertIpo" parameterType="com.tao.trade.infra.db.model.CnStockIpo">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.cn_stock_ipo (symbol, name, ipo_date, issue_date, amount,
+            market_amount, price, pe, limit_amount, funds, ballot ) values (#{item.symbol,jdbcType=VARCHAR},
+            #{item.name,jdbcType=VARCHAR}, #{item.ipoDate,jdbcType=DATE}, #{item.issueDate,jdbcType=DATE},
+            #{item.amount,jdbcType=NUMERIC}, #{item.marketAmount,jdbcType=NUMERIC}, #{item.price,jdbcType=NUMERIC},
+            #{item.pe,jdbcType=NUMERIC}, #{item.limitAmount,jdbcType=NUMERIC}, #{item.funds,jdbcType=NUMERIC},
+            #{item.ballot,jdbcType=NUMERIC}) ON CONFLICT(symbol) DO NOTHING
+        </foreach>
+    </insert>
+    <insert id="batchInsertMarket" parameterType="com.tao.trade.infra.db.model.CnMarketDaily">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.cn_market_daily (listing, delisting, up, down, vol, amount,
+            profit, shibor, libor, hibor, trade_date) values (#{item.listing,jdbcType=INTEGER}, #{item.delisting,jdbcType=INTEGER},
+            #{item.up,jdbcType=INTEGER}, #{item.down,jdbcType=INTEGER}, #{item.vol,jdbcType=NUMERIC}, #{item.amount,jdbcType=NUMERIC},
+            #{item.profit,jdbcType=NUMERIC}, #{item.shibor,jdbcType=NUMERIC}, #{item.libor,jdbcType=NUMERIC},
+            #{item.hibor,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(trade_date) DO NOTHING
+        </foreach>
+    </insert>
+    <insert id="insertOrUpdate" parameterType="com.tao.trade.infra.db.model.SysStatus">
+        insert into public.sys_status (name, status)
+        values (#{name,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR})
+        ON CONFLICT(name) DO UPDATE SET status = #{status,jdbcType=VARCHAR}
+    </insert>
+    <insert id="batchInsertDailyStat" parameterType="com.tao.trade.infra.db.model.CnStockDailyStat">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.cn_stock_daily_stat (symbol, price, sma_price, ma_price, ema_price, wma_price, trade_date)
+            values (#{item.symbol,jdbcType=VARCHAR}, #{item.price,jdbcType=NUMERIC},
+            #{item.smaPrice,jdbcType=NUMERIC}, #{item.maPrice,jdbcType=NUMERIC}, #{item.emaPrice,jdbcType=NUMERIC},
+            #{item.wmaPrice,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(symbol, trade_date) DO NOTHING
+        </foreach>
+    </insert>
+    <insert id="insertOrUpdateDelta" parameterType="com.tao.trade.infra.db.model.DataDeltaDate">
+        <!--
+          WARNING - @mbg.generated
+          This element is automatically generated by MyBatis Generator, do not modify.
+          This element was generated on Mon Feb 27 17:52:39 CST 2023.
+        -->
+        insert into public.data_delta_date (name, data_date)
+        values (#{name,jdbcType=VARCHAR}, #{dataDate,jdbcType=DATE}) ON CONFLICT(name) DO UPDATE SET data_date = #{dataDate,jdbcType=DATE}
+    </insert>
+</mapper>

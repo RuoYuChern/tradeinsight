@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: "trade-insight"
+  datasource:
+    druid:
+      url: "jdbc:postgresql://127.0.0.1:5432/taijidb"
+      username: ""
+      password: ""
+      driver-class-name: "org.postgresql.Driver"
+      initial-size: 5
+      max-active: 5
+      min-idle: 5
+      max-wait: 2000
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      validation-query: "SELECT 1"
+      validation-query-timeout: 1000
+      test-on-borrow: false
+      test-on-return: false
+      test-while-idle: true
+      time-between-eviction-runs-millis: 5000
+      min-evictable-idle-time-millis: 30000
+      max-evictable-idle-time-millis: 30000
+      filters: stat,log4j2
+      filter:
+        stat:
+          enabled: true
+          db-type: postgresql
+          log-slow-sql: true
+          slow-sql-millis: 5000
+  mvc:
+    static-path-pattern: "classpath:/WEB-INF/static/"
+  thymeleaf:
+    prefix: "classpath:/WEB-INF/templates/"
+
+server:
+  port: 9010
+  shutdown: graceful
+
+tao:
+  tu-share:
+    token: ""
+
+mybatis:
+  config-location: "classpath:mybatis-config.xml"
+  mapper-locations: "classpath:mybatis/*.xml"
