@@ -25,6 +25,8 @@ public class TuShareClient {
     private List<String> stockBasicFields;
     private List<String> ipoFields;
     private List<String> dailyFields;
+    private List<String> moneyFields;
+    private List<String> gdpFields;
     @Autowired
     private TuShareApi api;
     @Value("${tao.tu-share.token}")
@@ -69,6 +71,24 @@ public class TuShareClient {
         dailyFields.add("pct_chg");
         dailyFields.add("vol");
         dailyFields.add("amount");
+
+        moneyFields = new ArrayList<>();
+        for(int m = 0; m <= 2; m++) {
+            moneyFields.add(String.format("m%d", m));
+            moneyFields.add(String.format("m%d_yoy", m));
+            moneyFields.add(String.format("m%d_mom", m));
+        }
+
+        gdpFields = new ArrayList<>();
+        gdpFields.add("quarter");
+        gdpFields.add("gdp");
+        gdpFields.add("gdp_yoy");
+        gdpFields.add("pi");
+        gdpFields.add("pi_yoy");
+        gdpFields.add("si");
+        gdpFields.add("si_yoy");
+        gdpFields.add("ti");
+        gdpFields.add("ti_yoy");
 
         limiter = RateLimiter.create(100);
     }
@@ -257,6 +277,7 @@ public class TuShareClient {
         if(dto.isHas_more()) {
             log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
         }
+
         TuShareData tuShareData = new TuShareData(dto.getFields());
         List<BorVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
@@ -280,6 +301,92 @@ public class TuShareClient {
             list.add(vo);
         }
         return list;
+    }
 
+    private List<MoneySupplyVo> getMoneySupply(String startMonth, String endMonth){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("cn_m");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("start_m", startMonth);
+        params.put("end_m", endMonth);
+        reqDto.setParams(params);
+        reqDto.setFields(moneyFields);
+
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return null;
+        }
+
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
+
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<MoneySupplyVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            MoneySupplyVo vo = new MoneySupplyVo();
+            vo.setMonth(tuShareData.getStr("month"));
+            vo.setM0(tuShareData.getBD("m0",3, RoundingMode.HALF_DOWN));
+            vo.setM1(tuShareData.getBD("m1", 3, RoundingMode.HALF_DOWN));
+            vo.setM2(tuShareData.getBD("m2",3, RoundingMode.HALF_DOWN));
+            vo.setM0Yoy(tuShareData.getBD("m0_yoy",3, RoundingMode.HALF_DOWN));
+            vo.setM1Yoy(tuShareData.getBD("m1_yoy",3, RoundingMode.HALF_DOWN));
+            vo.setM2Yoy(tuShareData.getBD("m2_yoy",3, RoundingMode.HALF_DOWN));
+            vo.setM0Mom(tuShareData.getBD("m0_mom",3, RoundingMode.HALF_DOWN));
+            vo.setM1Mom(tuShareData.getBD("m1_mom",3, RoundingMode.HALF_DOWN));
+            vo.setM2Mom(tuShareData.getBD("m2_mom",3, RoundingMode.HALF_DOWN));
+            list.add(vo);
+        }
+        return list;
+    }
+
+    private List<GdpVo> getGdp(String startQ, String endQ){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("cn_gdp");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("start_q", startQ);
+        params.put("end_q", endQ);
+        reqDto.setParams(params);
+        reqDto.setFields(moneyFields);
+
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return null;
+        }
+
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
+
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<GdpVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            GdpVo vo = new GdpVo();
+            vo.setQuarter(tuShareData.getStr("month"));
+            vo.setGdp(tuShareData.getBD("gdp",3, RoundingMode.HALF_DOWN));
+            vo.setGdpYoy(tuShareData.getBD("gdp_yoy",3, RoundingMode.HALF_DOWN));
+
+            vo.setPi(tuShareData.getBD("pi",3, RoundingMode.HALF_DOWN));
+            vo.setPiYoy(tuShareData.getBD("pi_yoy",3, RoundingMode.HALF_DOWN));
+
+            vo.setSi(tuShareData.getBD("si", 3, RoundingMode.HALF_DOWN));
+            vo.setSiYoy(tuShareData.getBD("si_yoy",3, RoundingMode.HALF_DOWN));
+
+            vo.setTi(tuShareData.getBD("ti",3, RoundingMode.HALF_DOWN));
+            vo.setTiYoy(tuShareData.getBD("ti_yoy",3, RoundingMode.HALF_DOWN));
+
+            list.add(vo);
+        }
+        return list;
     }
 }
