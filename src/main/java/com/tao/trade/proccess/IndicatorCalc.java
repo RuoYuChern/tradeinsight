@@ -1,6 +1,6 @@
 package com.tao.trade.proccess;
 
-import com.tao.trade.domain.CnStockBaseData;
+import com.tao.trade.domain.TaoData;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnStockDaily;
@@ -24,9 +24,9 @@ public class IndicatorCalc{
     private final static int MV_SIZE = 200;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
-    private final CnStockBaseData stockBaseData;
+    private final TaoData stockBaseData;
 
-    public IndicatorCalc(CnStockDao stockDao, TuShareClient tuShareClient, CnStockBaseData stockBaseData) {
+    public IndicatorCalc(CnStockDao stockDao, TuShareClient tuShareClient, TaoData stockBaseData) {
         this.stockDao = stockDao;
         this.tuShareClient = tuShareClient;
         this.stockBaseData = stockBaseData;

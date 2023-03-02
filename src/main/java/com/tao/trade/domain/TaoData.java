@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
-public class CnStockBaseData {
+public class TaoData {
     private AtomicReference<List<StockBasicVo>> basicVoList;
-    public CnStockBaseData(){
+    public TaoData(){
         basicVoList = new AtomicReference<>();
     }
 

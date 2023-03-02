@@ -2,15 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <header th:fragment="tao-head">
-        <div class="d-flex flex-column flex-md-row align-items-right p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+        <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
             <h5 class="my-0 mr-md-auto font-weight-normal" th:text="${company}"></h5>
-            <nav class="my-2 my-md-0 mr-md-3">
-                <a class="p-2 text-dark" href="#">Features</a>
-                <a class="p-2 text-dark" href="#">Enterprise</a>
-                <a class="p-2 text-dark" href="#">Support</a>
-                <a class="p-2 text-dark" href="#">Pricing</a>
-            </nav>
-            <a class="btn btn-outline-primary" href="#">Sign up</a>
+            <ul class="nav justify-content-end">
+                <li class="nav-item"><a class="nav-link" th:href="@{/}">首页</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/rebound}">触底反弹</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/recommend}">推荐</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/market-sentiment}">市场情绪</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/crypto-market}">Crypto行情</a></li>
+            </ul>
+            <a class="btn btn-outline-primary" th:href="@{/#}">Sign up</a>
         </div>
     </header>
 </body>

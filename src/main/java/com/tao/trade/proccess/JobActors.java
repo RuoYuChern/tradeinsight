@@ -1,6 +1,6 @@
 package com.tao.trade.proccess;
 
-import com.tao.trade.domain.CnStockBaseData;
+import com.tao.trade.domain.TaoData;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.vo.StockBasicVo;
@@ -34,7 +34,7 @@ public class JobActors {
     @Autowired
     private TuShareClient tuShareClient;
     @Autowired
-    private CnStockBaseData stockBaseData;
+    private TaoData stockBaseData;
     private ScheduledExecutorService scheduledActor;
     public JobActors(){
         lock = new ReentrantLock();

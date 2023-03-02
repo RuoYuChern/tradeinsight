@@ -1,6 +1,6 @@
 package com.tao.trade.proccess;
 
-import com.tao.trade.domain.CnStockBaseData;
+import com.tao.trade.domain.TaoData;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnMarketDaily;
@@ -22,9 +22,9 @@ public class DataFetcher {
     private static String TU_DATE_FMT = "yyyyMMdd";
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
-    private final CnStockBaseData stockBaseData;
+    private final TaoData stockBaseData;
 
-    public DataFetcher(CnStockDao stockDao, TuShareClient tuShareClient, CnStockBaseData stockBaseData) {
+    public DataFetcher(CnStockDao stockDao, TuShareClient tuShareClient, TaoData stockBaseData) {
         this.stockDao = stockDao;
         this.tuShareClient = tuShareClient;
         this.stockBaseData = stockBaseData;
