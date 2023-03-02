@@ -188,4 +188,12 @@ public class CnStockDao {
         }
         return null;
     }
+
+    public List<CnMarketDaily> loadDailyMarket(Date last){
+        CnMarketDailyExample example = new CnMarketDailyExample();
+        example.createCriteria().andTradeDateGreaterThanOrEqualTo(last);
+        example.setOrderByClause("trade_date asc");
+        List<CnMarketDaily> cmd = marketDailyMapper.selectByExample(example);
+        return cmd;
+    }
 }

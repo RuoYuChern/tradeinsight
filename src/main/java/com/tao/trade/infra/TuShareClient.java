@@ -1,6 +1,5 @@
 package com.tao.trade.infra;
 
-import com.alibaba.fastjson.JSON;
 import com.google.common.util.concurrent.RateLimiter;
 import com.tao.trade.infra.dto.TuShareDataDto;
 import com.tao.trade.infra.dto.TuShareReqDto;
@@ -11,9 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -150,23 +147,7 @@ public class TuShareClient {
         List<StockBasicVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            StockBasicVo vo = new StockBasicVo();
-            vo.setTsCode(tuShareData.getStr("ts_code"));
-            vo.setSymbol(tuShareData.getStr("symbol"));
-            vo.setName(tuShareData.getStr("name"));
-            vo.setArea(tuShareData.getStr("area"));
-            vo.setIndustry(tuShareData.getStr("industry"));
-            if(!StringUtils.hasLength(vo.getIndustry())){
-                vo.setIndustry("None");
-            }
-            vo.setMarket(tuShareData.getStr("market"));
-            if(!StringUtils.hasLength(vo.getMarket())){
-                vo.setMarket("None");
-            }
-            vo.setExchange(tuShareData.getStr("exchange"));
-            vo.setListDate(tuShareData.getStr("list_date"));
-            vo.setListStatus(tuShareData.getStr("list_status"));
-            vo.setIsHs(tuShareData.getStr("is_hs"));
+            StockBasicVo vo = tuShareData.toBasicVo();
             list.add(vo);
         }
         return list;
@@ -196,19 +177,7 @@ public class TuShareClient {
         List<StockIpoVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            StockIpoVo vo = new StockIpoVo();
-            vo.setTsCode(tuShareData.getStr("ts_code"));
-            vo.setName(tuShareData.getStr("name"));
-            vo.setIpoDate(tuShareData.getStr("ipo_date"));
-            vo.setIssueDate(tuShareData.getStr("issue_date"));
-            vo.setAmount(tuShareData.getBD("amount"));
-            vo.setMarketAmount(tuShareData.getBD("market_amount"));
-            vo.setPrice(tuShareData.getBD("price"));
-            vo.setPe(tuShareData.getBD("pe"));
-            vo.setLimitAmount(tuShareData.getBD("limit_amount"));
-            vo.setFunds(tuShareData.getBD("funds"));
-            vo.setBallot(tuShareData.getBD("ballot"));
-
+            StockIpoVo vo = tuShareData.toIpo();
             list.add(vo);
         }
         return list;
@@ -239,19 +208,7 @@ public class TuShareClient {
         List<StockDailyVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            StockDailyVo vo = new StockDailyVo();
-            vo.setSymbol(tuShareData.getStr("ts_code"));
-            vo.setDay(tuShareData.getStr("trade_date"));
-            vo.setOpen(tuShareData.getBD("open"));
-            vo.setHigh(tuShareData.getBD("high"));
-            vo.setLow(tuShareData.getBD("low"));
-            vo.setClose(tuShareData.getBD("close"));
-            vo.setPreClose(tuShareData.getBD("pre_close"));
-            vo.setChange(tuShareData.getBD("change"));
-            vo.setPctChg(tuShareData.getBD("pct_chg"));
-            vo.setVol(tuShareData.getBD("vol"));
-            vo.setAmount(tuShareData.getBD("amount"));
-
+            StockDailyVo vo = tuShareData.toDailyVo();
             list.add(vo);
         }
         return list;
@@ -282,28 +239,13 @@ public class TuShareClient {
         List<BorVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            BorVo vo = new BorVo();
-            vo.setDate(tuShareData.getStr("date"));
-            vo.setName(rate.getName());
-            vo.setOn(tuShareData.getBD("on",6, RoundingMode.HALF_DOWN));
-            vo.setOneWeek(tuShareData.getBD("1w", 6, RoundingMode.HALF_DOWN));
-            vo.setTwoWeek(tuShareData.getBD("2w",6, RoundingMode.HALF_DOWN));
-            vo.setOneMonth(tuShareData.getBD("1m",6, RoundingMode.HALF_DOWN));
-            vo.setTwoMonth(tuShareData.getBD("2m",6, RoundingMode.HALF_DOWN));
-            vo.setThreeMonth(tuShareData.getBD("3m",6, RoundingMode.HALF_DOWN));
-            vo.setSixMonth(tuShareData.getBD("6m",6, RoundingMode.HALF_DOWN));
-            vo.setNineMonth(tuShareData.getBD("9m",6, RoundingMode.HALF_DOWN));
-            if(rate.equals(BankOfferedRate.SHIBOR)){
-                vo.setTwelveMonth(tuShareData.getBD("1y", 6, RoundingMode.HALF_DOWN));
-            }else {
-                vo.setTwelveMonth(tuShareData.getBD("12m", 6, RoundingMode.HALF_DOWN));
-            }
+            BorVo vo = tuShareData.toBorVo(rate);
             list.add(vo);
         }
         return list;
     }
 
-    private List<MoneySupplyVo> getMoneySupply(String startMonth, String endMonth){
+    public List<MoneySupplyVo> getMoneySupply(String startMonth, String endMonth){
         TuShareReqDto reqDto = new TuShareReqDto();
         reqDto.setApi_name("cn_m");
         reqDto.setToken(apiKey);
@@ -329,23 +271,13 @@ public class TuShareClient {
         List<MoneySupplyVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            MoneySupplyVo vo = new MoneySupplyVo();
-            vo.setMonth(tuShareData.getStr("month"));
-            vo.setM0(tuShareData.getBD("m0",3, RoundingMode.HALF_DOWN));
-            vo.setM1(tuShareData.getBD("m1", 3, RoundingMode.HALF_DOWN));
-            vo.setM2(tuShareData.getBD("m2",3, RoundingMode.HALF_DOWN));
-            vo.setM0Yoy(tuShareData.getBD("m0_yoy",3, RoundingMode.HALF_DOWN));
-            vo.setM1Yoy(tuShareData.getBD("m1_yoy",3, RoundingMode.HALF_DOWN));
-            vo.setM2Yoy(tuShareData.getBD("m2_yoy",3, RoundingMode.HALF_DOWN));
-            vo.setM0Mom(tuShareData.getBD("m0_mom",3, RoundingMode.HALF_DOWN));
-            vo.setM1Mom(tuShareData.getBD("m1_mom",3, RoundingMode.HALF_DOWN));
-            vo.setM2Mom(tuShareData.getBD("m2_mom",3, RoundingMode.HALF_DOWN));
+            MoneySupplyVo vo = tuShareData.toMoneySupply();
             list.add(vo);
         }
         return list;
     }
 
-    private List<GdpVo> getGdp(String startQ, String endQ){
+    public List<GdpVo> getGdp(String startQ, String endQ){
         TuShareReqDto reqDto = new TuShareReqDto();
         reqDto.setApi_name("cn_gdp");
         reqDto.setToken(apiKey);
@@ -371,20 +303,67 @@ public class TuShareClient {
         List<GdpVo> list = new ArrayList<>(dto.getItems().size());
         for(List<Object> item: dto.getItems()){
             tuShareData.setValues(item);
-            GdpVo vo = new GdpVo();
-            vo.setQuarter(tuShareData.getStr("month"));
-            vo.setGdp(tuShareData.getBD("gdp",3, RoundingMode.HALF_DOWN));
-            vo.setGdpYoy(tuShareData.getBD("gdp_yoy",3, RoundingMode.HALF_DOWN));
+            GdpVo vo = tuShareData.toGdpVo();
+            list.add(vo);
+        }
+        return list;
+    }
 
-            vo.setPi(tuShareData.getBD("pi",3, RoundingMode.HALF_DOWN));
-            vo.setPiYoy(tuShareData.getBD("pi_yoy",3, RoundingMode.HALF_DOWN));
+    public List<CnCpiVo> getCnCpi(String startMonth, String endMonth){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("cn_cpi");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("start_m", startMonth);
+        params.put("end_m", endMonth);
+        reqDto.setParams(params);
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return null;
+        }
 
-            vo.setSi(tuShareData.getBD("si", 3, RoundingMode.HALF_DOWN));
-            vo.setSiYoy(tuShareData.getBD("si_yoy",3, RoundingMode.HALF_DOWN));
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
 
-            vo.setTi(tuShareData.getBD("ti",3, RoundingMode.HALF_DOWN));
-            vo.setTiYoy(tuShareData.getBD("ti_yoy",3, RoundingMode.HALF_DOWN));
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<CnCpiVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            CnCpiVo vo = tuShareData.toCnCpiVo();
+            list.add(vo);
+        }
+        return list;
+    }
 
+    public List<CnPpiVo> getCnPpi(String startMonth, String endMonth){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("cn_ppi");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("start_m", startMonth);
+        params.put("end_m", endMonth);
+        reqDto.setParams(params);
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return null;
+        }
+
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
+
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<CnPpiVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            CnPpiVo vo = tuShareData.toCnPpiVo();
             list.add(vo);
         }
         return list;
