@@ -6,9 +6,11 @@ import com.tao.trade.infra.vo.CnCpiVo;
 import com.tao.trade.infra.vo.CnPpiVo;
 import com.tao.trade.infra.vo.GdpVo;
 import com.tao.trade.infra.vo.MoneySupplyVo;
+import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+@Mapper
 public interface TaoConvert {
     TaoConvert CONVERT = Mappers.getMapper(TaoConvert.class);
     CnPpiDto fromPpi(CnPpiVo cnPpiVo);

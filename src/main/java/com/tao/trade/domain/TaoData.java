@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 @Slf4j
 public class TaoData {
+    private final static int MAX_DATE = -60;
 
     @Autowired
     private CnStockDao dao;
@@ -50,7 +51,8 @@ public class TaoData {
         DashBoardDto boardDto = new DashBoardDto();
 
         Date today = new Date();
-        Date last30 = DateHelper.afterNDays(today, 60);
+        Date last30 = DateHelper.afterNDays(today, MAX_DATE);
+        Pair<String, String> yearMonth = DateHelper.getOneYearM();
         String tradeDate = DateHelper.dateToStr("yyyyMMdd", last30);
 
         /**获取每日大盘**/
@@ -64,11 +66,12 @@ public class TaoData {
         }
 
         /**货币供应量**/
-        String month = DateHelper.dateToStr("yyyyMM", today);
-        callable = () -> marketDaily.get(String.format("MS-%s",month), ()->loadMoneySupply(today));
+        callable = () -> marketDaily.get(String.format("MS-%s",yearMonth.getLeft()), ()->loadMoneySupply(yearMonth));
         obj = Help.call(callable);
         if(obj != null){
             boardDto.setMoneyList((List<MoneyQuantityDto>) obj);
+        }else{
+            boardDto.setMoneyList(new ArrayList<>());
         }
 
         Pair<String, String> quarter = DateHelper.getOneYearQ();
@@ -77,14 +80,17 @@ public class TaoData {
         obj = Help.call(callable);
         if(obj != null){
             boardDto.setGdpList((List<GDPDto>) obj);
+        }else {
+            boardDto.setGdpList(new ArrayList<>());
         }
 
         /**CPI**/
-        Pair<String, String> yearMonth = DateHelper.getOneYearM();
         callable = () -> marketDaily.get(String.format("CPI-%s", yearMonth.getLeft()), ()->loadCpi(yearMonth));
         obj = Help.call(callable);
         if(obj != null){
             boardDto.setCpiDtoList((List<CnCpiDto>) obj);
+        }else{
+            boardDto.setCpiDtoList(new ArrayList<>());
         }
 
         /**PPI**/
@@ -92,6 +98,8 @@ public class TaoData {
         obj = Help.call(callable);
         if(obj != null){
             boardDto.setPpiDtoList((List<CnPpiDto>) obj);
+        }else {
+            boardDto.setPpiDtoList(new ArrayList<>());
         }
 
         return boardDto;
@@ -105,12 +113,13 @@ public class TaoData {
             for(CnPpiVo vo: list){
                 ppiList.add(TaoConvert.CONVERT.fromPpi(vo));
             }
+            log.info("Load ppi between:{},{},size:{}", month.getLeft(), month.getRight(), ppiList.size());
             return ppiList;
         }catch (Throwable t){
             log.warn("Load ppi between:{},{}, exceptions:{}", month.getLeft(), month.getRight(),
                     t.getMessage());
         }
-        return new ArrayList<>();
+        return null;
     }
 
     private List<CnCpiDto> loadCpi(Pair<String,String> month){
@@ -121,12 +130,13 @@ public class TaoData {
             for(CnCpiVo vo: list){
                 cpiList.add(TaoConvert.CONVERT.fromCpi(vo));
             }
+            log.info("Load cpi between:{},{},size:{}", month.getLeft(), month.getRight(), cpiList.size());
             return cpiList;
         }catch (Throwable t){
             log.warn("Load cpi between:{},{}, exceptions:{}", month.getLeft(), month.getRight(),
                     t.getMessage());
         }
-        return new ArrayList<>();
+        return null;
     }
 
     private List<GDPDto> loadGdp(Pair<String, String> quarter){
@@ -137,12 +147,14 @@ public class TaoData {
             for(GdpVo vo: list){
                 gdpList.add(TaoConvert.CONVERT.fromGdp(vo));
             }
+            log.info("Load cpi between:{},{},size:{}", quarter.getLeft(), quarter.getRight(), gdpList.size());
             return gdpList;
         }catch (Throwable t){
             log.warn("Load gdp between:{},{}, exceptions:{}", quarter.getLeft(), quarter.getRight(),
                     t.getMessage());
+            t.printStackTrace();
         }
-        return new ArrayList<>();
+        return null;
     }
 
     private List<MarketDailyDto> loadMarketDaily(String key,Date last30){
@@ -158,24 +170,25 @@ public class TaoData {
             dto.setMood(BigDecimal.ZERO);
             list.add(dto);
         }
+        log.info("loadMarketDaily:{},size:{}", key, list.size());
         return list;
     }
 
-    private List<MoneyQuantityDto> loadMoneySupply(Date today){
-        Pair<String,String> pair = DateHelper.getPreMonth(today);
-        log.info("loadMoneySupply between:{}~{}", pair.getLeft(), pair.getRight());
+    private List<MoneyQuantityDto> loadMoneySupply(Pair<String, String> yearMonth){
+        log.info("loadMoneySupply between:{}~{}", yearMonth.getLeft(), yearMonth.getRight());
         try {
-            List<MoneySupplyVo> list = tuShareClient.getMoneySupply(pair.getLeft(), pair.getRight());
+            List<MoneySupplyVo> list = tuShareClient.getMoneySupply(yearMonth.getLeft(), yearMonth.getRight());
             List<MoneyQuantityDto> quantityList = new ArrayList<>();
             for(MoneySupplyVo vo:list){
                 quantityList.add(TaoConvert.CONVERT.fromMoney(vo));
             }
+            log.info("loadMoneySupply between:{}~{},size:{}", yearMonth.getLeft(), yearMonth.getRight(), quantityList.size());
             return quantityList;
         }catch (Throwable t){
-            log.warn("Load money supply between:{},{}, exceptions:{}", pair.getLeft(), pair.getRight(),
+            log.warn("Load money supply between:{},{}, exceptions:{}", yearMonth.getLeft(), yearMonth.getRight(),
                     t.getMessage());
         }
-        return new ArrayList<>();
+        return null;
     }
 
     public List<StockBasicVo> getBasic(){

@@ -164,7 +164,7 @@ public class TuShareData {
 
     public GdpVo toGdpVo(){
         GdpVo vo = new GdpVo();
-        vo.setQuarter(this.getStr("month"));
+        vo.setQuarter(this.getStr("quarter"));
         vo.setGdp(this.getBD("gdp",3, RoundingMode.HALF_DOWN));
         vo.setGdpYoy(this.getBD("gdp_yoy",3, RoundingMode.HALF_DOWN));
         vo.setPi(this.getBD("pi",3, RoundingMode.HALF_DOWN));

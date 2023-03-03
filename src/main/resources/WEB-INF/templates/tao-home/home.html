@@ -2,11 +2,292 @@
 
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{head :: tao-head}"></head>
-<body>
+<body class="d-flex flex-column h-100">
  <div th:replace="~{tao_header :: tao-head}"></div>
- <h1>Hello</h1>
+ <main role="main" class="flex-shrink-0">
+  <div class="container-fluid">
+   <div class="row row-deck row-cards">
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">交易额(千元)</div>
+      <div id="chart-amount-bg" class="chart-sm"></div>
+      <div class="card-body">
+       <a href="#" class="btn btn-primary">查询</a>
+      </div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">交易量(手)</div>
+      <div id="chart-vol-bg" class="chart-sm"></div>
+      <div class="card-body">
+       <a href="#" class="btn btn-primary">查询</a>
+      </div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">资金变动(千元)</div>
+      <div id="chart-profit-bg" class="chart-sm"></div>
+      <div class="card-body">
+       <a href="#" class="btn btn-primary">查询</a>
+      </div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">上涨股票(只)</div>
+      <div id="chart-up-bg" class="chart-sm"></div>
+      <div class="card-body">
+       <a href="#" class="btn btn-primary">查询</a>
+      </div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">下跌股票(只)</div>
+      <div id="chart-down-bg" class="chart-sm"></div>
+      <div class="card-body">
+       <a href="#" class="btn btn-primary">查询</a>
+      </div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+    <div class="card">
+     <div class="card-header">ShiBor(%)</div>
+     <div id="chart-shibor-bg" class="chart-sm"></div>
+     <div class="card-body">
+      <a href="#" class="btn btn-primary">查询</a>
+     </div>
+    </div>
+   </div>
+   <div class="col-sm-6 col-lg-3">
+    <div class="card">
+     <div class="card-header">IPO股票(只)</div>
+     <div id="chart-listing-bg" class="chart-sm"></div>
+     <div class="card-body">
+      <a href="#" class="btn btn-primary">查询</a>
+     </div>
+    </div>
+   </div>
+   <div class="col-sm-6 col-lg-3">
+    <div class="card">
+     <div class="card-header">市场情绪</div>
+     <div id="chart-mood-bg" class="chart-sm"></div>
+     <div class="card-body">
+      <a href="#" class="btn btn-primary">查询</a>
+     </div>
+    </div>
+   </div>
 
+    <div class="col-sm-12 col-lg-12">
+     <div class="card">
+      <div class="card-header">GDP</div>
+      <table class="table">
+       <thead>
+       <tr>
+        <th scope="col">季度</th>
+        <th scope="col">累计值(亿元)</th>
+        <th scope="col">同比增速(%)</th>
+        <th scope="col">第一产业(亿元)</th>
+        <th scope="col">同比增速(%)</th>
+        <th scope="col">第二产业(亿元)</th>
+        <th scope="col">同比增速(%)</th>
+        <th scope="col">第三产业(亿元)</th>
+        <th scope="col">同比增速(%)</th>
+       </tr>
+       </thead>
+       <tbody>
+       <tr th:each="gdp : ${dashBoard.gdpList}">
+        <th scope="row" th:text="${gdp.quarter}"></th>
+        <td th:text="${gdp.gdp}"></td>
+        <td th:text="${gdp.gdpYoy}"></td>
+        <td th:text="${gdp.pi}"></td>
+        <td th:text="${gdp.piYoy}"></td>
+        <td th:text="${gdp.si}"></td>
+        <td th:text="${gdp.siYoy}"></td>
+        <td th:text="${gdp.ti}"></td>
+        <td th:text="${gdp.tiYoy}"></td>
+       </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+
+    <div class="col-sm-12 col-lg-12">
+     <div class="card">
+      <div class="card-header">货币供应量</div>
+      <table class="table">
+       <thead>
+       <tr>
+        <th scope="col">月份</th>
+        <th scope="col">M0(亿元)</th>
+        <th scope="col">M0同比(%)</th>
+        <th scope="col">M0环比(%)</th>
+        <th scope="col">M1(亿元)</th>
+        <th scope="col">M1同比(%)</th>
+        <th scope="col">M1环比(%)</th>
+        <th scope="col">M2(亿元)</th>
+        <th scope="col">M2同比(%)</th>
+        <th scope="col">M2环比(%)</th>
+       </tr>
+       </thead>
+       <tbody>
+       <tr th:each="mqd : ${dashBoard.moneyList}">
+        <th scope="row" th:text="${mqd.month}"></th>
+        <td th:text="${mqd.m0}"></td>
+        <td th:text="${mqd.m0Yoy}"></td>
+        <td th:text="${mqd.m0Mom}"></td>
+        <td th:text="${mqd.m1}"></td>
+        <td th:text="${mqd.m1Yoy}"></td>
+        <td th:text="${mqd.m1Mom}"></td>
+        <td th:text="${mqd.m2}"></td>
+        <td th:text="${mqd.m2Yoy}"></td>
+        <td th:text="${mqd.m2Mom}"></td>
+       </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+
+
+
+  </div>
+  </div>
+ </main>
+ <div th:replace="~{tao_footer :: tao-footer}"></div>
  <script th:src="@{/static/js/jquery.slim.min.js}"></script>
  <script th:src="@{/static/js/bootstrap.bundle.min.js}"></script>
+ <script th:src="@{/static/js/apexcharts.min.js}"></script>
+ <script th:inline="javascript" type="text/javascript">
+  var amount = {
+     series: [{name: "amount",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /**Amount**/
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  amount.series[0].data.push(/*[[${mdo.amount}]]*/);
+  amount.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartAmount = new ApexCharts(document.querySelector("#chart-amount-bg"), amount);
+  chartAmount.render();
+
+  /**vol**/
+  var vol = {
+     series: [{name: "vol",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  vol.series[0].data.push(/*[[${mdo.vol}]]*/);
+  vol.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartVol = new ApexCharts(document.querySelector("#chart-vol-bg"), vol);
+  chartVol.render();
+
+  /**profit**/
+  var profit = {
+     series: [{name: "profit",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  profit.series[0].data.push(/*[[${mdo.profit}]]*/);
+  profit.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartProfit = new ApexCharts(document.querySelector("#chart-profit-bg"), profit);
+  chartProfit.render();
+
+  /**up**/
+  var up = {
+     series: [{name: "up",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  up.series[0].data.push(/*[[${mdo.up}]]*/);
+  up.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartUp = new ApexCharts(document.querySelector("#chart-up-bg"), up);
+  chartUp.render();
+
+  /**down**/
+  var down = {
+     series: [{name: "down",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  down.series[0].data.push(/*[[${mdo.down}]]*/);
+  down.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartDown = new ApexCharts(document.querySelector("#chart-down-bg"), down);
+  chartDown.render();
+
+  /**shibor**/
+  var shibor = {
+     series: [{name: "shibor",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  shibor.series[0].data.push(/*[[${mdo.shibor}]]*/);
+  shibor.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartSb = new ApexCharts(document.querySelector("#chart-shibor-bg"), shibor);
+  chartSb.render();
+
+  /**listing**/
+  var listing = {
+     series: [{name: "listing",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  listing.series[0].data.push(/*[[${mdo.listing}]]*/);
+  listing.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartList = new ApexCharts(document.querySelector("#chart-listing-bg"), listing);
+  chartList.render();
+
+  /**mood**/
+  var mood = {
+     series: [{name: "mood",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'straight'},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
+  mood.series[0].data.push(/*[[${mdo.mood}]]*/);
+  mood.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  /*[/]*/
+  var chartMood = new ApexCharts(document.querySelector("#chart-mood-bg"), mood);
+  chartMood.render();
+
+ </script>
 </body>
 </html>

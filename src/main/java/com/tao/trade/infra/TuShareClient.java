@@ -22,8 +22,6 @@ public class TuShareClient {
     private List<String> stockBasicFields;
     private List<String> ipoFields;
     private List<String> dailyFields;
-    private List<String> moneyFields;
-    private List<String> gdpFields;
     @Autowired
     private TuShareApi api;
     @Value("${tao.tu-share.token}")
@@ -68,24 +66,6 @@ public class TuShareClient {
         dailyFields.add("pct_chg");
         dailyFields.add("vol");
         dailyFields.add("amount");
-
-        moneyFields = new ArrayList<>();
-        for(int m = 0; m <= 2; m++) {
-            moneyFields.add(String.format("m%d", m));
-            moneyFields.add(String.format("m%d_yoy", m));
-            moneyFields.add(String.format("m%d_mom", m));
-        }
-
-        gdpFields = new ArrayList<>();
-        gdpFields.add("quarter");
-        gdpFields.add("gdp");
-        gdpFields.add("gdp_yoy");
-        gdpFields.add("pi");
-        gdpFields.add("pi_yoy");
-        gdpFields.add("si");
-        gdpFields.add("si_yoy");
-        gdpFields.add("ti");
-        gdpFields.add("ti_yoy");
 
         limiter = RateLimiter.create(100);
     }
@@ -167,7 +147,7 @@ public class TuShareClient {
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
         TuShareDataDto dto = rsp.getData();
         if(dto.isHas_more()) {
@@ -198,7 +178,7 @@ public class TuShareClient {
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
         TuShareDataDto dto = rsp.getData();
         if(dto.isHas_more()) {
@@ -227,7 +207,7 @@ public class TuShareClient {
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
 
         TuShareDataDto dto = rsp.getData();
@@ -253,13 +233,12 @@ public class TuShareClient {
         params.put("start_m", startMonth);
         params.put("end_m", endMonth);
         reqDto.setParams(params);
-        reqDto.setFields(moneyFields);
 
         limiter.acquire(1);
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
 
         TuShareDataDto dto = rsp.getData();
@@ -285,13 +264,11 @@ public class TuShareClient {
         params.put("start_q", startQ);
         params.put("end_q", endQ);
         reqDto.setParams(params);
-        reqDto.setFields(moneyFields);
-
         limiter.acquire(1);
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
 
         TuShareDataDto dto = rsp.getData();
@@ -321,7 +298,7 @@ public class TuShareClient {
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
 
         TuShareDataDto dto = rsp.getData();
@@ -351,7 +328,7 @@ public class TuShareClient {
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
             log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
-            return null;
+            return new ArrayList<>();
         }
 
         TuShareDataDto dto = rsp.getData();
