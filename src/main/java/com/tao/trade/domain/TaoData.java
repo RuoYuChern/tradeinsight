@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -65,6 +66,20 @@ public class TaoData {
             boardDto.setMarketDailyList(new ArrayList<>());
         }
 
+        /**沪深300指数**/
+        callable = ()->marketDaily.get(String.format("DI-%s", tradeDate),()->loadDailyIndex(tradeDate));
+        obj = Help.call(callable);
+        if(obj != null){
+            boardDto.setHsIndex((List<IndexDailyDto>) obj);
+        }else{
+            boardDto.setHsIndex(new ArrayList<>());
+        }
+
+        /**市场交易统计**/
+        callable = ()->marketDaily.get(String.format("MDS-%s", tradeDate),()->loadDailyInfo(tradeDate));
+        obj = Help.call(callable);
+        handleDailyInfo(obj, boardDto);
+
         /**货币供应量**/
         callable = () -> marketDaily.get(String.format("MS-%s",yearMonth.getLeft()), ()->loadMoneySupply(yearMonth));
         obj = Help.call(callable);
@@ -105,13 +120,48 @@ public class TaoData {
         return boardDto;
     }
 
+    private List<IndexDailyDto> loadDailyIndex(String tradeDate){
+        String endDate = DateHelper.dateToStr("yyyyMMdd", new Date());
+        log.info("loadDailyIndex between:{},{}", tradeDate, endDate);
+        try {
+            List<IndexDailyVo> list = tuShareClient.getDailyIndex("000300.SH", tradeDate, endDate);
+            if(list.size() > 30){
+                list = list.subList((list.size() - 30), list.size());
+            }
+            List<IndexDailyDto> indexList = new ArrayList<>(30);
+            for (int i = list.size(); i > 0; i--) {
+                indexList.add(TaoConvert.CONVERT.fromDailyIndex(list.get(i - 1)));
+            }
+            log.info("Load ppi between:{},{},size:{}", tradeDate, endDate, indexList.size());
+            return indexList;
+        }catch (Throwable t){
+            return null;
+        }
+    }
+
+    private List<DailyInfoDto> loadDailyInfo(String tradeDate){
+        String endDate = DateHelper.dateToStr("yyyyMMdd", new Date());
+        log.info("loadDailyIndex between:{},{}", tradeDate, endDate);
+        try {
+            List<DailyInfoVo> list = tuShareClient.getDailyInfo(tradeDate, endDate);
+            List<DailyInfoDto> indexList = new ArrayList<>();
+            for (int i = list.size(); i > 0; i--) {
+                indexList.add(TaoConvert.CONVERT.fromDailyInfo(list.get(i - 1)));
+            }
+            log.info("Load ppi between:{},{},size:{}", tradeDate, endDate, indexList.size());
+            return indexList;
+        }catch (Throwable t){
+            return null;
+        }
+    }
+
     private List<CnPpiDto> loadPpi(Pair<String,String> month){
         log.info("Load ppi between:{},{}", month.getLeft(), month.getRight());
         try{
             List<CnPpiVo> list = tuShareClient.getCnPpi(month.getLeft(), month.getRight());
             List<CnPpiDto> ppiList = new ArrayList<>(list.size());
-            for(CnPpiVo vo: list){
-                ppiList.add(TaoConvert.CONVERT.fromPpi(vo));
+            for(int i = list.size(); i > 0; i--){
+                ppiList.add(TaoConvert.CONVERT.fromPpi(list.get(i - 1)));
             }
             log.info("Load ppi between:{},{},size:{}", month.getLeft(), month.getRight(), ppiList.size());
             return ppiList;
@@ -127,8 +177,8 @@ public class TaoData {
         try{
             List<CnCpiVo> list = tuShareClient.getCnCpi(month.getLeft(), month.getRight());
             List<CnCpiDto> cpiList = new ArrayList<>(list.size());
-            for(CnCpiVo vo: list){
-                cpiList.add(TaoConvert.CONVERT.fromCpi(vo));
+            for(int i = list.size(); i > 0; i--){
+                cpiList.add(TaoConvert.CONVERT.fromCpi(list.get(i - 1)));
             }
             log.info("Load cpi between:{},{},size:{}", month.getLeft(), month.getRight(), cpiList.size());
             return cpiList;
@@ -144,8 +194,8 @@ public class TaoData {
         try{
             List<GdpVo> list = tuShareClient.getGdp(quarter.getLeft(), quarter.getRight());
             List<GDPDto> gdpList = new ArrayList<>(list.size());
-            for(GdpVo vo: list){
-                gdpList.add(TaoConvert.CONVERT.fromGdp(vo));
+            for(int i = list.size(); i > 0; i--){
+                gdpList.add(TaoConvert.CONVERT.fromGdp(list.get(i - 1)));
             }
             log.info("Load cpi between:{},{},size:{}", quarter.getLeft(), quarter.getRight(), gdpList.size());
             return gdpList;
@@ -179,8 +229,8 @@ public class TaoData {
         try {
             List<MoneySupplyVo> list = tuShareClient.getMoneySupply(yearMonth.getLeft(), yearMonth.getRight());
             List<MoneyQuantityDto> quantityList = new ArrayList<>();
-            for(MoneySupplyVo vo:list){
-                quantityList.add(TaoConvert.CONVERT.fromMoney(vo));
+            for(int i = list.size(); i > 0; i--){
+                quantityList.add(TaoConvert.CONVERT.fromMoney(list.get(i - 1)));
             }
             log.info("loadMoneySupply between:{}~{},size:{}", yearMonth.getLeft(), yearMonth.getRight(), quantityList.size());
             return quantityList;
@@ -189,6 +239,44 @@ public class TaoData {
                     t.getMessage());
         }
         return null;
+    }
+
+    private static void handleDailyInfo(Object obj, DashBoardDto boardDto){
+        boardDto.setSzMarket(new LinkedList<>());
+        boardDto.setSzMain(new LinkedList<>());
+        boardDto.setSzGEM(new LinkedList<>());
+        boardDto.setSzSME(new LinkedList<>());
+
+        boardDto.setShMARKET(new LinkedList<>());
+        boardDto.setShSTAR(new LinkedList<>());
+        boardDto.setShREP(new LinkedList<>());
+        if(obj == null){
+            return;
+        }
+
+        fillValue("SZ_MARKET", (List<DailyInfoDto>)obj, boardDto.getSzMarket());
+        fillValue("SZ_MAIN", (List<DailyInfoDto>)obj, boardDto.getSzMain());
+        fillValue("SZ_GEM", (List<DailyInfoDto>)obj, boardDto.getSzGEM());
+        fillValue("SZ_SME", (List<DailyInfoDto>)obj, boardDto.getSzSME());
+
+        fillValue("SH_MARKET", (List<DailyInfoDto>)obj, boardDto.getShMARKET());
+        fillValue("SH_STAR", (List<DailyInfoDto>)obj, boardDto.getShSTAR());
+        fillValue("SH_REP", (List<DailyInfoDto>)obj, boardDto.getShREP());
+
+    }
+
+    private static void fillValue(String tsCode, List<DailyInfoDto> list, List<DailyInfoDto> tgt){
+        List<DailyInfoDto> tmp = new ArrayList<>();
+        for(DailyInfoDto dto:list){
+            if(dto.getTsCode().equals(tsCode)){
+                tmp.add(dto);
+            }
+        }
+        if(tmp.size() > 0){
+            tgt.addAll(tmp.subList(tmp.size() - 30, tmp.size()));
+        }else{
+            tgt.addAll(tmp);
+        }
     }
 
     public List<StockBasicVo> getBasic(){

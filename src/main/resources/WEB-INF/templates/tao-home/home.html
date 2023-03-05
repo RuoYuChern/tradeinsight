@@ -7,150 +7,83 @@
  <main role="main" class="flex-shrink-0">
   <div class="container-fluid">
    <div class="row row-deck row-cards">
+
     <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">交易额(千元)</div>
+      <div class="card-header">成交金额/量(千元/手)</div>
       <div id="chart-amount-bg" class="chart-sm"></div>
-      <div class="card-body">
-       <a href="#" class="btn btn-primary">查询</a>
-      </div>
      </div>
     </div>
-    <div class="col-sm-6 col-lg-3">
-     <div class="card">
-      <div class="card-header">交易量(手)</div>
-      <div id="chart-vol-bg" class="chart-sm"></div>
-      <div class="card-body">
-       <a href="#" class="btn btn-primary">查询</a>
-      </div>
-     </div>
-    </div>
+
     <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">资金变动(千元)</div>
       <div id="chart-profit-bg" class="chart-sm"></div>
-      <div class="card-body">
-       <a href="#" class="btn btn-primary">查询</a>
-      </div>
      </div>
     </div>
+
     <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">上涨股票(只)</div>
-      <div id="chart-up-bg" class="chart-sm"></div>
-      <div class="card-body">
-       <a href="#" class="btn btn-primary">查询</a>
-      </div>
+      <div class="card-header">上涨/下跌股票(只)</div>
+      <div id="chart-up-down-bg" class="chart-sm"></div>
      </div>
     </div>
+
     <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">下跌股票(只)</div>
-      <div id="chart-down-bg" class="chart-sm"></div>
-      <div class="card-body">
-       <a href="#" class="btn btn-primary">查询</a>
-      </div>
+      <div class="card-header">涨停/跌停股票(只)</div>
+      <div id="chart-limit-bg" class="chart-sm"></div>
      </div>
     </div>
+
     <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">ShiBor(%)</div>
      <div id="chart-shibor-bg" class="chart-sm"></div>
-     <div class="card-body">
-      <a href="#" class="btn btn-primary">查询</a>
-     </div>
     </div>
    </div>
+
    <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">IPO股票(只)</div>
      <div id="chart-listing-bg" class="chart-sm"></div>
-     <div class="card-body">
-      <a href="#" class="btn btn-primary">查询</a>
-     </div>
     </div>
    </div>
+
    <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">市场情绪</div>
      <div id="chart-mood-bg" class="chart-sm"></div>
-     <div class="card-body">
-      <a href="#" class="btn btn-primary">查询</a>
-     </div>
     </div>
    </div>
 
-    <div class="col-sm-12 col-lg-12">
+    <div class="col-sm-6 col-lg-6">
      <div class="card">
-      <div class="card-header">GDP</div>
-      <table class="table">
-       <thead>
-       <tr>
-        <th scope="col">季度</th>
-        <th scope="col">累计值(亿元)</th>
-        <th scope="col">同比增速(%)</th>
-        <th scope="col">第一产业(亿元)</th>
-        <th scope="col">同比增速(%)</th>
-        <th scope="col">第二产业(亿元)</th>
-        <th scope="col">同比增速(%)</th>
-        <th scope="col">第三产业(亿元)</th>
-        <th scope="col">同比增速(%)</th>
-       </tr>
-       </thead>
-       <tbody>
-       <tr th:each="gdp : ${dashBoard.gdpList}">
-        <th scope="row" th:text="${gdp.quarter}"></th>
-        <td th:text="${gdp.gdp}"></td>
-        <td th:text="${gdp.gdpYoy}"></td>
-        <td th:text="${gdp.pi}"></td>
-        <td th:text="${gdp.piYoy}"></td>
-        <td th:text="${gdp.si}"></td>
-        <td th:text="${gdp.siYoy}"></td>
-        <td th:text="${gdp.ti}"></td>
-        <td th:text="${gdp.tiYoy}"></td>
-       </tr>
-       </tbody>
-      </table>
+      <div class="card-header">GDP(亿元)</div>
+      <div id="chart-gdp-bg" class="chart-sm"></div>
      </div>
     </div>
 
-    <div class="col-sm-12 col-lg-12">
+    <div class="col-sm-6 col-lg-6">
      <div class="card">
-      <div class="card-header">货币供应量</div>
-      <table class="table">
-       <thead>
-       <tr>
-        <th scope="col">月份</th>
-        <th scope="col">M0(亿元)</th>
-        <th scope="col">M0同比(%)</th>
-        <th scope="col">M0环比(%)</th>
-        <th scope="col">M1(亿元)</th>
-        <th scope="col">M1同比(%)</th>
-        <th scope="col">M1环比(%)</th>
-        <th scope="col">M2(亿元)</th>
-        <th scope="col">M2同比(%)</th>
-        <th scope="col">M2环比(%)</th>
-       </tr>
-       </thead>
-       <tbody>
-       <tr th:each="mqd : ${dashBoard.moneyList}">
-        <th scope="row" th:text="${mqd.month}"></th>
-        <td th:text="${mqd.m0}"></td>
-        <td th:text="${mqd.m0Yoy}"></td>
-        <td th:text="${mqd.m0Mom}"></td>
-        <td th:text="${mqd.m1}"></td>
-        <td th:text="${mqd.m1Yoy}"></td>
-        <td th:text="${mqd.m1Mom}"></td>
-        <td th:text="${mqd.m2}"></td>
-        <td th:text="${mqd.m2Yoy}"></td>
-        <td th:text="${mqd.m2Mom}"></td>
-       </tr>
-       </tbody>
-      </table>
+      <div class="card-header">货币供应量(亿元)</div>
+      <div id="chart-money-bg" class="chart-sm"></div>
      </div>
     </div>
 
+    <div class="col-sm-6 col-lg-6">
+     <div class="card">
+      <div class="card-header">居民消费价格指数</div>
+      <div id="chart-cpi-bg" class="chart-sm"></div>
+     </div>
+    </div>
 
+    <div class="col-sm-6 col-lg-6">
+     <div class="card">
+      <div class="card-header">工业生产者出厂价格指数</div>
+      <div id="chart-ppi-bg" class="chart-sm"></div>
+     </div>
+    </div>
 
   </div>
   </div>
@@ -161,7 +94,7 @@
  <script th:src="@{/static/js/apexcharts.min.js}"></script>
  <script th:inline="javascript" type="text/javascript">
   var amount = {
-     series: [{name: "amount",data: []}],
+     series: [{name: "amount",data: []},{name: "vol",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'straight'},
@@ -171,26 +104,11 @@
   /**Amount**/
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
   amount.series[0].data.push(/*[[${mdo.amount}]]*/);
+  amount.series[1].data.push(/*[[${mdo.vol}]]*/);
   amount.xaxis.categories.push(/*[[${mdo.date}]]*/);
   /*[/]*/
   var chartAmount = new ApexCharts(document.querySelector("#chart-amount-bg"), amount);
   chartAmount.render();
-
-  /**vol**/
-  var vol = {
-     series: [{name: "vol",data: []}],
-     chart: {height: 200,type: 'line',zoom: {enabled: false}},
-     dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
-     xaxis: {categories: [],}
-  };
-  /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
-  vol.series[0].data.push(/*[[${mdo.vol}]]*/);
-  vol.xaxis.categories.push(/*[[${mdo.date}]]*/);
-  /*[/]*/
-  var chartVol = new ApexCharts(document.querySelector("#chart-vol-bg"), vol);
-  chartVol.render();
 
   /**profit**/
   var profit = {
@@ -208,9 +126,9 @@
   var chartProfit = new ApexCharts(document.querySelector("#chart-profit-bg"), profit);
   chartProfit.render();
 
-  /**up**/
-  var up = {
-     series: [{name: "up",data: []}],
+  /**downUp**/
+  var downUp = {
+     series: [{name: "up",data: []},{name: "down",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'straight'},
@@ -218,15 +136,16 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
-  up.series[0].data.push(/*[[${mdo.up}]]*/);
-  up.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  downUp.series[0].data.push(/*[[${mdo.up}]]*/);
+  downUp.series[1].data.push(/*[[${mdo.down}]]*/);
+  downUp.xaxis.categories.push(/*[[${mdo.date}]]*/);
   /*[/]*/
-  var chartUp = new ApexCharts(document.querySelector("#chart-up-bg"), up);
-  chartUp.render();
+  var chartDownUp = new ApexCharts(document.querySelector("#chart-up-down-bg"), downUp);
+  chartDownUp.render();
 
-  /**down**/
-  var down = {
-     series: [{name: "down",data: []}],
+  /**downUpLimit**/
+  var downUpLimit = {
+     series: [{name: "upLimit",data: []},{name: "downLimit",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'straight'},
@@ -234,11 +153,13 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
-  down.series[0].data.push(/*[[${mdo.down}]]*/);
-  down.xaxis.categories.push(/*[[${mdo.date}]]*/);
+  downUpLimit.series[0].data.push(/*[[${mdo.uplimit}]]*/);
+  downUpLimit.series[1].data.push(/*[[${mdo.downlimit}]]*/);
+  downUpLimit.xaxis.categories.push(/*[[${mdo.date}]]*/);
   /*[/]*/
-  var chartDown = new ApexCharts(document.querySelector("#chart-down-bg"), down);
-  chartDown.render();
+  var chartDownUpLimit = new ApexCharts(document.querySelector("#chart-limit-bg"), downUpLimit);
+  chartDownUpLimit.render();
+
 
   /**shibor**/
   var shibor = {
@@ -287,6 +208,120 @@
   /*[/]*/
   var chartMood = new ApexCharts(document.querySelector("#chart-mood-bg"), mood);
   chartMood.render();
+
+  /**gdp**/
+  var gdp = {
+      series: [{name: '累计值',data: []}, {name: '第一产业',data: []}, {name: '第二产业',data: []}, {name: '第三产业',data: []}],
+      chart: {type: 'bar',height: 200},
+      plotOptions: {
+          bar: {horizontal: false,columnWidth: '55%',endingShape: 'rounded'},},
+          dataLabels: {enabled: false},
+          stroke: {show: true,width: 2,
+          colors: ['transparent']
+      },
+      xaxis: { categories: [],},
+      yaxis: {
+      title: { text: '元 (1亿)'}
+      },
+     fill: {
+        opacity: 1
+     },
+     tooltip: { y: {formatter: function (val) { return "$ " + val + " 亿元"}}}
+  };
+  /*[# th:each="vo : ${dashBoard.gdpList}"]*/
+  gdp.series[0].data.push(/*[[${vo.gdp}]]*/);
+  gdp.series[1].data.push(/*[[${vo.pi}]]*/);
+  gdp.series[2].data.push(/*[[${vo.si}]]*/);
+  gdp.series[3].data.push(/*[[${vo.ti}]]*/);
+  gdp.xaxis.categories.push(/*[[${vo.quarter}]]*/);
+  /*[/]*/
+  var chartGdp = new ApexCharts(document.querySelector("#chart-gdp-bg"), gdp);
+  chartGdp.render();
+
+  /**money**/
+  var money = {
+      series: [{name: 'M0',data: []}, {name: 'M1',data: []}, {
+          name: 'M2',data: []}],
+      chart: {type: 'bar',height: 200},
+      plotOptions: {
+          bar: {horizontal: false,columnWidth: '55%',endingShape: 'rounded'},},
+          dataLabels: {enabled: false},
+          stroke: {show: true,width: 2,
+          colors: ['transparent']
+      },
+      xaxis: { categories: [],},
+      yaxis: {
+      title: { text: '当月'}
+      },
+     fill: {
+        opacity: 1
+     },
+     tooltip: { y: {formatter: function (val) { return "$ " + val + " 亿元"}}}
+  };
+  /*[# th:each="vo : ${dashBoard.moneyList}"]*/
+  money.series[0].data.push(/*[[${vo.m0}]]*/);
+  money.series[1].data.push(/*[[${vo.m1}]]*/);
+  money.series[2].data.push(/*[[${vo.m2}]]*/);
+  money.xaxis.categories.push(/*[[${vo.month}]]*/);
+  /*[/]*/
+  var chartMoney = new ApexCharts(document.querySelector("#chart-money-bg"), money);
+  chartMoney.render();
+
+  /**cpi**/
+  var cpi = {
+      series: [{name: '全国',data: []}, {name: '城市',data: []}, {name: '农村',data: []}],
+      chart: {type: 'bar',height: 200},
+      plotOptions: {
+          bar: {horizontal: false,columnWidth: '55%',endingShape: 'rounded'},},
+          dataLabels: {enabled: false},
+          stroke: {show: true,width: 2,
+          colors: ['transparent']
+      },
+      xaxis: { categories: [],},
+      yaxis: {
+      title: { text: '当月'}
+      },
+     fill: {
+        opacity: 1
+     },
+     tooltip: { y: {formatter: function (val) { return "$ " + val + ""}}}
+  };
+  /*[# th:each="vo : ${dashBoard.cpiDtoList}"]*/
+  cpi.series[0].data.push(/*[[${vo.ntVal}]]*/);
+  cpi.series[1].data.push(/*[[${vo.townVal}]]*/);
+  cpi.series[2].data.push(/*[[${vo.cntVal}]]*/);
+  cpi.xaxis.categories.push(/*[[${vo.month}]]*/);
+  /*[/]*/
+  var chartCPI = new ApexCharts(document.querySelector("#chart-cpi-bg"), cpi);
+  chartCPI.render();
+
+  /**ppi**/
+  var ppi = {
+      series: [{name: '全部工业品',data: []}, {name: '生产资料',data: []}, {name: '生活资料',data: []}],
+      chart: {type: 'bar',height: 200},
+      plotOptions: {
+          bar: {horizontal: false,columnWidth: '55%',endingShape: 'rounded'},},
+          dataLabels: {enabled: false},
+          stroke: {show: true,width: 2,
+          colors: ['transparent']
+      },
+      xaxis: { categories: [],},
+      yaxis: {
+      title: { text: '当月同比'}
+      },
+     fill: {
+        opacity: 1
+     },
+     tooltip: { y: {formatter: function (val) { return "$ " + val + ""}}}
+  };
+  /*[# th:each="vo : ${dashBoard.ppiDtoList}"]*/
+  ppi.series[0].data.push(/*[[${vo.ppiYoy}]]*/);
+  ppi.series[1].data.push(/*[[${vo.ppiMpYoy}]]*/);
+  ppi.series[2].data.push(/*[[${vo.ppiCgYoy}]]*/);
+  ppi.xaxis.categories.push(/*[[${vo.month}]]*/);
+  /*[/]*/
+  var chartPPI = new ApexCharts(document.querySelector("#chart-ppi-bg"), ppi);
+  chartPPI.render();
 
  </script>
 </body>

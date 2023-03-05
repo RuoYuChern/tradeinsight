@@ -9,10 +9,12 @@ public class MarketDailyDto {
     private BigDecimal amount;
     private BigDecimal vol;
     private BigDecimal profit;
-    private BigDecimal up;
-    private BigDecimal down;
+    private Integer up;
+    private Integer uplimit;
+    private Integer down;
+    private Integer downlimit;
     private BigDecimal shibor;
-    private BigDecimal listing;
+    private Integer listing;
     private BigDecimal mood;
     private String date;
 }

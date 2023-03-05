@@ -46,15 +46,10 @@ public class DateHelper {
 
         String endQ = String.format("%sQ%d", DateFormatUtils.format(now, "yyyy"), quarter);
         String startQ;
-        if(quarter == 4){
-            /**quarter = 4, Q1Q2Q3Q4**/
-            startQ = String.format("%sQ%d", DateFormatUtils.format(now, "yyyy"), 1);
-        }else{
-            /****quarter = 3, Q4Q1Q2Q3***/
-            /****quarter = 1, Q2Q3Q4Q1***/
-            Date lastDay = DateUtils.addYears(now, -1);
-            startQ = String.format("%sQ%d", DateFormatUtils.format(lastDay, "yyyy"), (quarter + 1));
-        }
+        Date lastDay = DateUtils.addYears(now, -1);
+        /****quarter = 3, Q4Q1Q2Q3***/
+        /****quarter = 1, Q2Q3Q4Q1***/
+        startQ = String.format("%sQ%d", DateFormatUtils.format(lastDay, "yyyy"), quarter);
         return Pair.of(startQ, endQ);
     }
 

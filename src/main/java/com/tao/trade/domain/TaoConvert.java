@@ -2,10 +2,7 @@ package com.tao.trade.domain;
 
 import com.tao.trade.facade.*;
 import com.tao.trade.infra.db.model.CnMarketDaily;
-import com.tao.trade.infra.vo.CnCpiVo;
-import com.tao.trade.infra.vo.CnPpiVo;
-import com.tao.trade.infra.vo.GdpVo;
-import com.tao.trade.infra.vo.MoneySupplyVo;
+import com.tao.trade.infra.vo.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -20,4 +17,7 @@ public interface TaoConvert {
 
     @Mapping(source = "tradeDate", target = "date", dateFormat="yyyyMMdd")
     MarketDailyDto fromMarket(CnMarketDaily daily);
+
+    IndexDailyDto fromDailyIndex(IndexDailyVo vo);
+    DailyInfoDto fromDailyInfo(DailyInfoVo vo);
 }

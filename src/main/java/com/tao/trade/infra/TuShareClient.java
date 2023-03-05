@@ -345,4 +345,66 @@ public class TuShareClient {
         }
         return list;
     }
+
+    public List<IndexDailyVo> getDailyIndex(String tsCode, String startDate, String endDate){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("index_dailybasic");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("ts_code", tsCode);
+        params.put("start_date", startDate);
+        params.put("end_date", endDate);
+        reqDto.setParams(params);
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return new ArrayList<>();
+        }
+
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
+
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<IndexDailyVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            IndexDailyVo vo = tuShareData.toDailyIndex();
+            list.add(vo);
+        }
+        return list;
+    }
+
+    public List<DailyInfoVo> getDailyInfo(String startDate, String endDate){
+        TuShareReqDto reqDto = new TuShareReqDto();
+        reqDto.setApi_name("daily_info");
+        reqDto.setToken(apiKey);
+        Map<String, Object> params = new HashMap<>();
+        params.put("start_date", startDate);
+        params.put("end_date", endDate);
+        params.put("exchange","SZ,SH");
+        reqDto.setParams(params);
+        limiter.acquire(1);
+        TuShareRspDto rsp = api.get(reqDto);
+        if(rsp.getCode() != 0) {
+            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            return new ArrayList<>();
+        }
+
+        TuShareDataDto dto = rsp.getData();
+        if(dto.isHas_more()) {
+            log.info("reqId:{}, code:{}, has_more:{}", rsp.getRequest_id(), rsp.getCode(), dto.isHas_more());
+        }
+
+        TuShareData tuShareData = new TuShareData(dto.getFields());
+        List<DailyInfoVo> list = new ArrayList<>(dto.getItems().size());
+        for(List<Object> item: dto.getItems()){
+            tuShareData.setValues(item);
+            DailyInfoVo vo = tuShareData.toDailyInfo();
+            list.add(vo);
+        }
+        return list;
+    }
 }

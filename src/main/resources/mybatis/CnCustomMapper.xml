@@ -48,10 +48,11 @@
     <insert id="batchInsertMarket" parameterType="com.tao.trade.infra.db.model.CnMarketDaily">
         <foreach collection="list" item="item" index="index" open="" close="" separator=";">
             insert into public.cn_market_daily (listing, delisting, up, down, vol, amount,
-            profit, shibor, libor, hibor, trade_date) values (#{item.listing,jdbcType=INTEGER}, #{item.delisting,jdbcType=INTEGER},
-            #{item.up,jdbcType=INTEGER}, #{item.down,jdbcType=INTEGER}, #{item.vol,jdbcType=NUMERIC}, #{item.amount,jdbcType=NUMERIC},
-            #{item.profit,jdbcType=NUMERIC}, #{item.shibor,jdbcType=NUMERIC}, #{item.libor,jdbcType=NUMERIC},
-            #{item.hibor,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(trade_date) DO NOTHING
+            profit, shibor, libor, hibor, trade_date,uplimit, downlimit) values (#{item.listing,jdbcType=INTEGER},
+            #{item.delisting,jdbcType=INTEGER}, #{item.up,jdbcType=INTEGER}, #{item.down,jdbcType=INTEGER}, #{item.vol,jdbcType=NUMERIC},
+            #{item.amount,jdbcType=NUMERIC},#{item.profit,jdbcType=NUMERIC}, #{item.shibor,jdbcType=NUMERIC}, #{item.libor,jdbcType=NUMERIC},
+            #{item.hibor,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}, #{item.upLimit,jdbcType=INTEGER}, #{item.downLimit,jdbcType=INTEGER})
+            ON CONFLICT(trade_date) DO NOTHING
         </foreach>
     </insert>
     <insert id="insertOrUpdate" parameterType="com.tao.trade.infra.db.model.SysStatus">

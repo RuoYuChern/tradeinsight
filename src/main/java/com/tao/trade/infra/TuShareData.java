@@ -212,4 +212,41 @@ public class TuShareData {
 
         return vo;
     }
+
+    public IndexDailyVo toDailyIndex(){
+        IndexDailyVo vo = new IndexDailyVo();
+        vo.setTradeDate(this.getStr("trade_date"));
+
+        vo.setTotalMv(this.getBD("total_mv",3, RoundingMode.HALF_DOWN));
+        vo.setFloatMv(this.getBD("float_mv",3, RoundingMode.HALF_DOWN));
+        vo.setTotalShare(this.getBD("total_share",3, RoundingMode.HALF_DOWN));
+        vo.setFloatShare(this.getBD("float_share",3, RoundingMode.HALF_DOWN));
+        vo.setFreeShare(this.getBD("free_share",3, RoundingMode.HALF_DOWN));
+        vo.setTurnoverRate(this.getBD("turnover_rate",3, RoundingMode.HALF_DOWN));
+        vo.setTurnoverRateFree(this.getBD("turnover_rate_f",3, RoundingMode.HALF_DOWN));
+
+        vo.setPe(this.getBD("pe",3, RoundingMode.HALF_DOWN));
+        vo.setPeTtm(this.getBD("pe_ttm",3, RoundingMode.HALF_DOWN));
+        vo.setPb(this.getBD("pb",3, RoundingMode.HALF_DOWN));
+
+        return vo;
+    }
+
+    public DailyInfoVo toDailyInfo(){
+        DailyInfoVo vo = new DailyInfoVo();
+        vo.setTradeDate(this.getStr("trade_date"));
+        vo.setTsName(this.getStr("ts_name"));
+        vo.setTsCode(this.getStr("ts_code"));
+        vo.setComCount(this.getI("com_count"));
+        vo.setTotalMv(this.getBD("total_mv",3, RoundingMode.HALF_DOWN));
+        vo.setFloatMv(this.getBD("float_mv",3, RoundingMode.HALF_DOWN));
+        vo.setTotalShare(this.getBD("total_share",3, RoundingMode.HALF_DOWN));
+        vo.setFloatShare(this.getBD("float_share",3, RoundingMode.HALF_DOWN));
+        vo.setAmount(this.getBD("amount",3, RoundingMode.HALF_DOWN));
+        vo.setVol(this.getBD("vol",3, RoundingMode.HALF_DOWN));
+        vo.setTransCount(this.getI("trans_count"));
+        vo.setPe(this.getBD("pe",3, RoundingMode.HALF_DOWN));
+        vo.setExchange(this.getStr("exchange"));
+        return vo;
+    }
 }
