@@ -1,10 +1,8 @@
 package com.tao.trade.utils;
 
-import org.apache.commons.lang3.time.CalendarUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.aspectj.weaver.ast.Call;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -72,13 +70,7 @@ public class DateHelper {
         int month = DateUtils.toCalendar(now).get(Calendar.MONTH) + 1;
         String endM = DateFormatUtils.format(now, "yyyyMM");
         Date lastDay;
-        if(month == 12){
-            lastDay = DateUtils.addMonths(now, -11);
-        }else{
-            /***-year + month**/
-            lastDay = DateUtils.addYears(now, -1);
-            lastDay = DateUtils.addMonths(lastDay, 1);
-        }
+        lastDay = DateUtils.addYears(now, -1);
         String startM = DateFormatUtils.format(lastDay, "yyyyMM");
         return Pair.of(startM, endM);
     }

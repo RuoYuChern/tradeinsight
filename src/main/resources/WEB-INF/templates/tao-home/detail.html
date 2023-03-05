@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{head :: tao-head}"></head>
+<body class="d-flex flex-column h-100">
+<div th:replace="~{tao_header :: tao-head}"></div>
+
+<main role="main" class="flex-shrink-0">
+    <div class="container-fluid">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-end">
+                <li th:class="page-item">
+                    <a class="page-link" th:href="@{${prePage}}">上一页</a>
+                </li>
+                <li class="page-item"><a class="page-link" th:href="@{/detail?page=1}">1</a></li>
+                <li class="page-item"><a class="page-link" th:href="@{/detail?page=2}">2</a></li>
+                <li class="page-item"><a class="page-link" th:href="@{/detail?page=3}">3</a></li>
+                <li class="page-item"><a class="page-link" th:href="@{/detail?page=4}">4</a></li>
+                <li class="page-item"><a class="page-link" th:href="@{/detail?page=5}">5</a></li>
+                <li th:class="page-item">
+                    <a class="page-link" th:href="@{${nextPage}}">下一页</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="row row-deck row-cards">
+            <div class="col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header">GDP</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">季度</th>
+                            <th scope="col">累计值(亿元)</th>
+                            <th scope="col">同比增速(%)</th>
+                            <th scope="col">第一产业(亿元)</th>
+                            <th scope="col">同比增速(%)</th>
+                            <th scope="col">第二产业(亿元)</th>
+                            <th scope="col">同比增速(%)</th>
+                            <th scope="col">第三产业(亿元)</th>
+                            <th scope="col">同比增速(%)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="gdp : ${dashBoard.gdpList}">
+                            <th scope="row" th:text="${gdp.quarter}"></th>
+                            <td th:text="${gdp.gdp}"></td>
+                            <td th:text="${gdp.gdpYoy}"></td>
+                            <td th:text="${gdp.pi}"></td>
+                            <td th:text="${gdp.piYoy}"></td>
+                            <td th:text="${gdp.si}"></td>
+                            <td th:text="${gdp.siYoy}"></td>
+                            <td th:text="${gdp.ti}"></td>
+                            <td th:text="${gdp.tiYoy}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">居民消费价格指数</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">月份</th>
+                            <th scope="col">全国当月值</th>
+                            <th scope="col">全国同比(%)</th>
+                            <th scope="col">全国环比(%)</th>
+                            <th scope="col">全国累计值</th>
+                            <th scope="col">城市当月值</th>
+                            <th scope="col">城市同比(%)</th>
+                            <th scope="col">城市环比(%)</th>
+                            <th scope="col">城市累计值</th>
+                            <th scope="col">农村当月值</th>
+                            <th scope="col">农村同比(%)</th>
+                            <th scope="col">农村环比(%)</th>
+                            <th scope="col">农村累计值</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="cpi : ${dashBoard.cpiDtoList}">
+                            <th scope="row" th:text="${cpi.month}"></th>
+                            <td th:text="${cpi.ntVal}"></td>
+                            <td th:text="${cpi.ntYoy}"></td>
+                            <td th:text="${cpi.ntMon}"></td>
+                            <td th:text="${cpi.ntAccu}"></td>
+                            <td th:text="${cpi.townVal}"></td>
+                            <td th:text="${cpi.townYoy}"></td>
+                            <td th:text="${cpi.townMon}"></td>
+                            <td th:text="${cpi.townAccu}"></td>
+                            <td th:text="${cpi.cntVal}"></td>
+                            <td th:text="${cpi.cntYoy}"></td>
+                            <td th:text="${cpi.cntMon}"></td>
+                            <td th:text="${cpi.cntAccu}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">工业生产者出厂价格指数</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">月份</th>
+                            <th scope="col">全部工业品(同比)</th>
+                            <th scope="col">生产资料(同比)</th>
+                            <th scope="col">生活资料(同比)</th>
+                            <th scope="col">全部工业品(环比)</th>
+                            <th scope="col">生产资料(环比)</th>
+                            <th scope="col">生活资料(环比)</th>
+                            <th scope="col">全部工业品(累计同比)</th>
+                            <th scope="col">生产资料(累计同比)</th>
+                            <th scope="col">生活资料(累计同比)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="ppi : ${dashBoard.ppiDtoList}">
+                            <th scope="row" th:text="${ppi.month}"></th>
+                            <td th:text="${ppi.ppiYoy}"></td>
+                            <td th:text="${ppi.ppiMpYoy}"></td>
+                            <td th:text="${ppi.ppiCgYoy}"></td>
+                            <td th:text="${ppi.ppiMom}"></td>
+                            <td th:text="${ppi.ppiMpMom}"></td>
+                            <td th:text="${ppi.ppiCgMom}"></td>
+                            <td th:text="${ppi.ppiAccu}"></td>
+                            <td th:text="${ppi.ppiMpAccu}"></td>
+                            <td th:text="${ppi.ppiCgAccu}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">货币供应量</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">月份</th>
+                            <th scope="col">M0(亿元)</th>
+                            <th scope="col">M0同比(%)</th>
+                            <th scope="col">M0环比(%)</th>
+                            <th scope="col">M1(亿元)</th>
+                            <th scope="col">M1同比(%)</th>
+                            <th scope="col">M1环比(%)</th>
+                            <th scope="col">M2(亿元)</th>
+                            <th scope="col">M2同比(%)</th>
+                            <th scope="col">M2环比(%)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="mqd : ${dashBoard.moneyList}">
+                            <th scope="row" th:text="${mqd.month}"></th>
+                            <td th:text="${mqd.m0}"></td>
+                            <td th:text="${mqd.m0Yoy}"></td>
+                            <td th:text="${mqd.m0Mom}"></td>
+                            <td th:text="${mqd.m1}"></td>
+                            <td th:text="${mqd.m1Yoy}"></td>
+                            <td th:text="${mqd.m1Mom}"></td>
+                            <td th:text="${mqd.m2}"></td>
+                            <td th:text="${mqd.m2Yoy}"></td>
+                            <td th:text="${mqd.m2Mom}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">上海市场</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">日期</th>
+                            <th scope="col">挂牌数</th>
+                            <th scope="col">总市值(亿元)</th>
+                            <th scope="col">流通市值(亿元)</th>
+                            <th scope="col">交易金额(亿元)</th>
+                            <th scope="col">成交量(亿股)</th>
+                            <th scope="col">pe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="did : ${dashBoard.shMARKET}">
+                            <th scope="row" th:text="${did.tradeDate}"></th>
+                            <td th:text="${did.comCount}"></td>
+                            <td th:text="${did.totalMv}"></td>
+                            <td th:text="${did.floatMv}"></td>
+                            <td th:text="${did.amount}"></td>
+                            <td th:text="${did.vol}"></td>
+                            <td th:text="${did.pe}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">深圳市场</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">日期</th>
+                            <th scope="col">挂牌数</th>
+                            <th scope="col">总市值(亿元)</th>
+                            <th scope="col">流通市值(亿元)</th>
+                            <th scope="col">交易金额(亿元)</th>
+                            <th scope="col">成交量(亿股)</th>
+                            <th scope="col">pe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="did : ${dashBoard.szMarket}">
+                            <th scope="row" th:text="${did.tradeDate}"></th>
+                            <td th:text="${did.comCount}"></td>
+                            <td th:text="${did.totalMv}"></td>
+                            <td th:text="${did.floatMv}"></td>
+                            <td th:text="${did.amount}"></td>
+                            <td th:text="${did.vol}"></td>
+                            <td th:text="${did.pe}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">深圳主板</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">日期</th>
+                            <th scope="col">挂牌数</th>
+                            <th scope="col">总市值(亿元)</th>
+                            <th scope="col">流通市值(亿元)</th>
+                            <th scope="col">交易金额(亿元)</th>
+                            <th scope="col">成交量(亿股)</th>
+                            <th scope="col">pe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="did : ${dashBoard.szMain}">
+                            <th scope="row" th:text="${did.tradeDate}"></th>
+                            <td th:text="${did.comCount}"></td>
+                            <td th:text="${did.totalMv}"></td>
+                            <td th:text="${did.floatMv}"></td>
+                            <td th:text="${did.amount}"></td>
+                            <td th:text="${did.vol}"></td>
+                            <td th:text="${did.pe}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">科创板</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">日期</th>
+                            <th scope="col">挂牌数</th>
+                            <th scope="col">总市值(亿元)</th>
+                            <th scope="col">流通市值(亿元)</th>
+                            <th scope="col">交易金额(亿元)</th>
+                            <th scope="col">成交量(亿股)</th>
+                            <th scope="col">pe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="did : ${dashBoard.shSTAR}">
+                            <th scope="row" th:text="${did.tradeDate}"></th>
+                            <td th:text="${did.comCount}"></td>
+                            <td th:text="${did.totalMv}"></td>
+                            <td th:text="${did.floatMv}"></td>
+                            <td th:text="${did.amount}"></td>
+                            <td th:text="${did.vol}"></td>
+                            <td th:text="${did.pe}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-6">
+                <div class="card">
+                    <div class="card-header">创业板</div>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">日期</th>
+                            <th scope="col">挂牌数</th>
+                            <th scope="col">总股本(亿股)</th>
+                            <th scope="col">流通股本(亿股)</th>
+                            <th scope="col">总市值(亿元)</th>
+                            <th scope="col">流通市值(亿元)</th>
+                            <th scope="col">交易金额(亿元)</th>
+                            <th scope="col">成交量(亿股)</th>
+                            <th scope="col">pe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="did : ${dashBoard.szGEM}">
+                            <th scope="row" th:text="${did.tradeDate}"></th>
+                            <td th:text="${did.comCount}"></td>
+                            <td th:text="${did.totalMv}"></td>
+                            <td th:text="${did.floatMv}"></td>
+                            <td th:text="${did.amount}"></td>
+                            <td th:text="${did.vol}"></td>
+                            <td th:text="${did.pe}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+
+<div th:replace="~{tao_footer :: tao-footer}"></div>
+<script th:src="@{/static/js/jquery.slim.min.js}"></script>
+<script th:src="@{/static/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

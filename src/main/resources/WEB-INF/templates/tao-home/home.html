@@ -7,84 +7,84 @@
  <main role="main" class="flex-shrink-0">
   <div class="container-fluid">
    <div class="row row-deck row-cards">
-
     <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">成交金额/量(千元/手)</div>
       <div id="chart-amount-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">资金变动(千元)</div>
       <div id="chart-profit-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">上涨/下跌股票(只)</div>
       <div id="chart-up-down-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">涨停/跌停股票(只)</div>
       <div id="chart-limit-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">ShiBor(%)</div>
      <div id="chart-shibor-bg" class="chart-sm"></div>
     </div>
    </div>
-
    <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">IPO股票(只)</div>
      <div id="chart-listing-bg" class="chart-sm"></div>
     </div>
    </div>
-
    <div class="col-sm-6 col-lg-3">
     <div class="card">
      <div class="card-header">市场情绪</div>
      <div id="chart-mood-bg" class="chart-sm"></div>
     </div>
    </div>
-
+    <div class="col-sm-6 col-lg-6">
+     <div class="card">
+      <div class="card-header">上海市场</div>
+      <div id="chart-hs-market-bg" class="chart-sm"></div>
+     </div>
+    </div>
+    <div class="col-sm-6 col-lg-6">
+     <div class="card">
+      <div class="card-header">沪深300</div>
+      <div id="chart-hs300-bg" class="chart-sm"></div>
+     </div>
+    </div>
     <div class="col-sm-6 col-lg-6">
      <div class="card">
       <div class="card-header">GDP(亿元)</div>
       <div id="chart-gdp-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-6">
      <div class="card">
       <div class="card-header">货币供应量(亿元)</div>
       <div id="chart-money-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-6">
      <div class="card">
       <div class="card-header">居民消费价格指数</div>
       <div id="chart-cpi-bg" class="chart-sm"></div>
      </div>
     </div>
-
     <div class="col-sm-6 col-lg-6">
      <div class="card">
       <div class="card-header">工业生产者出厂价格指数</div>
       <div id="chart-ppi-bg" class="chart-sm"></div>
      </div>
     </div>
-
   </div>
   </div>
  </main>
@@ -192,6 +192,57 @@
   /*[/]*/
   var chartList = new ApexCharts(document.querySelector("#chart-listing-bg"), listing);
   chartList.render();
+
+  /***上证指数***/
+  var shMarket = {
+     series: [{name: '挂牌数',type: 'column',data: []}, {name: '交易金额',type: 'column',data: []}, {
+          name: '成交量',type: 'line',data: []}],
+     chart: {height: 200,type: 'line',stacked: false},
+     dataLabels: {enabled: false},
+     stroke: {width: [1, 1, 4]},
+     title: {text: 'SH_MARKET',align: 'left',offsetX: 110},
+     xaxis: {categories: [],},
+     yaxis: [{axisTicks: {show: true,},axisBorder: {show: true,color: '#008FFB'},
+            labels: {style: {colors: '#008FFB',}},
+            title: {text: "挂牌数",style: {color: '#008FFB',}},
+            tooltip: {enabled: true}},{seriesName: '挂牌数',opposite: true,axisTicks: {show: true,},
+            axisBorder: {show: true,color: '#00E396'},labels: {style: {colors: '#00E396',}},
+            title: {text: "交易金额(亿元)",style: {color: '#00E396',}},},{
+            seriesName: '成交量',opposite: true,axisTicks: {show: true,},
+            axisBorder: {show: true,color: '#FEB019'},
+            labels: {style: {colors: '#FEB019',},},title: {text: "成交量(亿股)",
+              style: {color: '#FEB019',}}},
+        ],
+     tooltip: {fixed: {enabled: true,position: 'topLeft', offsetY: 30,offsetX: 60},},
+     legend: {horizontalAlign: 'left',offsetX: 40}
+     };
+  /*[# th:each="mdo : ${dashBoard.shMARKET}"]*/
+  shMarket.series[0].data.push(/*[[${mdo.comCount}]]*/);
+  shMarket.series[1].data.push(/*[[${mdo.amount}]]*/);
+  shMarket.series[2].data.push(/*[[${mdo.vol}]]*/);
+  shMarket.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
+  /*[/]*/
+  var chartSM = new ApexCharts(document.querySelector("#chart-hs-market-bg"), shMarket);
+  chartSM.render();
+
+  /***hushen300***/
+  var hs = {
+      series: [{name: '换手率(自由)',type: 'column',data: []}, {name: '换手率',type: 'line',data: []}],
+      chart: {height: 200,type: 'line',},
+      stroke: {width: [0, 4]},
+      title: {text: ''},
+      dataLabels: {enabled: true,enabledOnSeries: [1]},
+      labels: [],
+      xaxis: {type: ''},
+      yaxis: [{title: {text: '换手率(自由)',},}, {opposite: true,title: {text: '换手率'}}]
+  };
+  /*[# th:each="mdo : ${dashBoard.hsIndex}"]*/
+  hs.series[0].data.push(/*[[${mdo.turnoverRateFree}]]*/);
+  hs.series[1].data.push(/*[[${mdo.turnoverRate}]]*/);
+  hs.labels.push(/*[[${mdo.tradeDate}]]*/);
+  /*[/]*/
+  var chartH3 = new ApexCharts(document.querySelector("#chart-hs300-bg"), hs);
+  chartH3.render();
 
   /**mood**/
   var mood = {

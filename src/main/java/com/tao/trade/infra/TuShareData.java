@@ -74,6 +74,14 @@ public class TuShareData {
         return null;
     }
 
+    public BigDecimal getBDBase(String name, BigDecimal base, int newScale, RoundingMode roundingMode){
+        BigDecimal d = getBD(name);
+        if(d == null){
+            return d;
+        }
+        return d.divide(base, newScale, roundingMode);
+    }
+
     public StockIpoVo toIpo(){
         StockIpoVo vo = new StockIpoVo();
         vo.setTsCode(this.getStr("ts_code"));
@@ -217,8 +225,9 @@ public class TuShareData {
         IndexDailyVo vo = new IndexDailyVo();
         vo.setTradeDate(this.getStr("trade_date"));
 
-        vo.setTotalMv(this.getBD("total_mv",3, RoundingMode.HALF_DOWN));
-        vo.setFloatMv(this.getBD("float_mv",3, RoundingMode.HALF_DOWN));
+        BigDecimal base = new BigDecimal("1000");
+        vo.setTotalMv(this.getBDBase("total_mv", base,3, RoundingMode.HALF_DOWN));
+        vo.setFloatMv(this.getBDBase("float_mv",base,3, RoundingMode.HALF_DOWN));
         vo.setTotalShare(this.getBD("total_share",3, RoundingMode.HALF_DOWN));
         vo.setFloatShare(this.getBD("float_share",3, RoundingMode.HALF_DOWN));
         vo.setFreeShare(this.getBD("free_share",3, RoundingMode.HALF_DOWN));

@@ -126,13 +126,13 @@ public class TaoData {
         try {
             List<IndexDailyVo> list = tuShareClient.getDailyIndex("000300.SH", tradeDate, endDate);
             if(list.size() > 30){
-                list = list.subList((list.size() - 30), list.size());
+                list = list.subList(0, 30);
             }
             List<IndexDailyDto> indexList = new ArrayList<>(30);
             for (int i = list.size(); i > 0; i--) {
                 indexList.add(TaoConvert.CONVERT.fromDailyIndex(list.get(i - 1)));
             }
-            log.info("Load ppi between:{},{},size:{}", tradeDate, endDate, indexList.size());
+            log.info("Load dailyIndex between:{},{},size:{}", tradeDate, endDate, indexList.size());
             return indexList;
         }catch (Throwable t){
             return null;
@@ -145,10 +145,10 @@ public class TaoData {
         try {
             List<DailyInfoVo> list = tuShareClient.getDailyInfo(tradeDate, endDate);
             List<DailyInfoDto> indexList = new ArrayList<>();
-            for (int i = list.size(); i > 0; i--) {
-                indexList.add(TaoConvert.CONVERT.fromDailyInfo(list.get(i - 1)));
+            for (DailyInfoVo vo:list) {
+                indexList.add(TaoConvert.CONVERT.fromDailyInfo(vo));
             }
-            log.info("Load ppi between:{},{},size:{}", tradeDate, endDate, indexList.size());
+            log.info("Load dailyInfo between:{},{},size:{}", tradeDate, endDate, indexList.size());
             return indexList;
         }catch (Throwable t){
             return null;
@@ -272,10 +272,11 @@ public class TaoData {
                 tmp.add(dto);
             }
         }
-        if(tmp.size() > 0){
-            tgt.addAll(tmp.subList(tmp.size() - 30, tmp.size()));
-        }else{
-            tgt.addAll(tmp);
+        if(tmp.size() > 30){
+            tmp = tmp.subList(0, 30);
+        }
+        for(int i = tmp.size(); i > 0; i--){
+            tgt.add(tmp.get(i - 1));
         }
     }
 
