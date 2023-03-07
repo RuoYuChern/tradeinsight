@@ -9,6 +9,7 @@ import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnMarketDaily;
 import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.*;
+import com.tao.trade.ml.TimeSeries;
 import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class TaoData {
     private final static int MAX_DATE = 60;
+    private final static int WINDOW_SIZE = 10;
 
     @Autowired
     private CnStockDao dao;
@@ -45,7 +47,7 @@ public class TaoData {
         marketDaily = CacheBuilder.newBuilder()
                 .initialCapacity(5)
                 .maximumSize(15)
-                .expireAfterWrite(1, TimeUnit.HOURS)
+                .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
         cnDownTopDto = new AtomicReference<>();
     }
@@ -223,18 +225,29 @@ public class TaoData {
     private List<DailyDto> loadDailyIndex(String symbol){
         log.info("loadDailyIndex symbol:{}", symbol);
         try {
-            List<SinaDailyVo> list = sinaClient.getSymbolDaily(symbol, 240, "no", 30);
-            if(list.size() > 30){
-                list = list.subList(0, 30);
-            }
-            List<DailyDto> indexList = new ArrayList<>(30);
+            List<SinaDailyVo> list = sinaClient.getSymbolDaily(symbol, 240, "no", 40);
+            List<DailyDto> indexList = new ArrayList<>(list.size());
             for (SinaDailyVo vo: list) {
                 if(StringUtils.hasLength(vo.getDay())){
                     vo.setDay(vo.getDay().replace("-",""));
                 }
                 indexList.add(TaoConvert.CONVERT.fromSinaDaily(vo));
             }
+            /**算EMA和WMA**/
+            for(int pos = indexList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
+                DailyDto vo = indexList.get(pos);
+                vo.setSma(TimeSeries.SMA(WINDOW_SIZE, pos, indexList, DailyDto::getClose));
+                vo.setEma(TimeSeries.EMA(WINDOW_SIZE, pos, indexList, DailyDto::getClose));
+                vo.setWma(TimeSeries.WMA(WINDOW_SIZE, pos, indexList, DailyDto::getClose));
+            }
             log.info("loadDailyIndex symbol:{},size:{}", symbol, indexList.size());
+            Iterator<DailyDto> it = indexList.iterator();
+            while (it.hasNext()){
+                DailyDto dto = it.next();
+                if(dto.getSma() == null){
+                    it.remove();
+                }
+            }
             return indexList;
         }catch (Throwable t){
             return null;

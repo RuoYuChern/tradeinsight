@@ -8,11 +8,9 @@ import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.StockBasicVo;
-import com.tao.trade.infra.vo.TradeDateVo;
 import com.tao.trade.ml.TimeSeries;
 import com.tao.trade.utils.DateHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
@@ -26,7 +24,7 @@ public class IndicatorCalc{
     private static String TU_DATE_FMT = "yyyyMMdd";
     private final static int WINDOW_SIZE = 10;
     private final static int MV_SIZE = 200;
-    private final static int MV_DATE_SIZE = 300;
+    private final static int MV_DATE_SIZE = 250;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
     private final TaoData stockBaseData;
@@ -59,7 +57,6 @@ public class IndicatorCalc{
             if(rate.compareTo(rateLevel) < 0){
                 continue;
             }
-
             StockBaseDto baseDto = new StockBaseDto();
             baseDto.setName(daily.getName());
             StockBasicVo basicVo = stockBaseData.getStockBase(daily.getSymbol());
@@ -99,7 +96,7 @@ public class IndicatorCalc{
                 continue;
             }
             List<CnStockDailyStat> statList = new LinkedList<>();
-            for(int pos = dailyList.size() - 1; pos >= WINDOW_SIZE; pos--){
+            for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
                 CnStockDailyStat dailyStat = new CnStockDailyStat();
                 CnStockDaily stockDaily = dailyList.get(pos);
 
@@ -132,20 +129,8 @@ public class IndicatorCalc{
         }
         Date startDate = DateHelper.strToDate(TU_DATE_FMT, indStart);
         Date endDate = DateHelper.strToDate(TU_DATE_FMT, indEnd);
-        Date lowDate = DateHelper.beforeNDays(startDate, MV_DATE_SIZE);
+        Date lowDate = DateHelper.getLastTradeDate(tuShareClient, DateHelper.beforeNDays(startDate, MV_DATE_SIZE), startDate);
         String strLowDate = DateHelper.dateToStr(TU_DATE_FMT, lowDate);
-        List<TradeDateVo> dateVoList = tuShareClient.trade_cal(strLowDate, indStart);
-        int num = 0;
-        for(int i = dateVoList.size(); i > 0; i--){
-            TradeDateVo dateVo = dateVoList.get(i);
-            if(dateVo.getIsOpen() == 1){
-                num ++;
-            }
-            if(num >= MV_SIZE){
-                strLowDate = dateVo.getDate();
-                break;
-            }
-        }
         log.info("calDelta:{} to {}, lowDate:{}", indStart, indEnd, strLowDate);
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);
         for (StockBasicVo vo: basicVoList){
@@ -154,7 +139,7 @@ public class IndicatorCalc{
                 continue;
             }
             List<CnStockDailyStat> statList = new LinkedList<>();
-            for(int pos = dailyList.size() - 1; pos >= WINDOW_SIZE; pos--){
+            for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
                 /**比较时间**/
                 CnStockDaily stockDaily = dailyList.get(pos);
                 if(stockDaily.getTradeDate().before(startDate)){

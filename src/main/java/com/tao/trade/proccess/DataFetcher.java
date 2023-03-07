@@ -83,7 +83,6 @@ public class DataFetcher {
                 total = total + dailyVos.size();
             }
             num = 0;
-            basicVoMap.clear();
         }
         if(num > 0){
             List<StockDailyVo> dailyVos = tuShareClient.daily(sb.toString(), startDate, endDate);
@@ -97,8 +96,8 @@ public class DataFetcher {
                 handleMarketDaily(dailyVos, dailyMap);
                 total = total + dailyVos.size();
             }
-            basicVoMap.clear();
         }
+        basicVoMap.clear();
         log.info("startDate:{}, endDate:{}, total:{}", startDate, endDate, total);
     }
 

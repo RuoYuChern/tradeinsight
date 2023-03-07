@@ -213,7 +213,7 @@
 
   /***sh**/
   var sh = {
-     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     series: [{name: "close",data: []},{name: "sma-10",data: []},{name: "ema-10",data: []},{name: "wma-10",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'smooth', width:2},
@@ -221,10 +221,10 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.shIndex}"]*/
-  sh.series[0].data.push(/*[[${mdo.open}]]*/);
-  sh.series[1].data.push(/*[[${mdo.close}]]*/);
-  sh.series[2].data.push(/*[[${mdo.high}]]*/);
-  sh.series[3].data.push(/*[[${mdo.low}]]*/);
+  sh.series[0].data.push(/*[[${mdo.close}]]*/);
+  sh.series[1].data.push(/*[[${mdo.sma}]]*/);
+  sh.series[2].data.push(/*[[${mdo.ema}]]*/);
+  sh.series[3].data.push(/*[[${mdo.wma}]]*/);
   sh.xaxis.categories.push(/*[[${mdo.day}]]*/);
   /*[/]*/
   var chartSh = new ApexCharts(document.querySelector("#chart-sh-bg"), sh);
@@ -232,7 +232,7 @@
 
   /***sz**/
   var sz = {
-     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     series: [{name: "close",data: []},{name: "sma-10",data: []},{name: "ema-10",data: []},{name: "wma-10",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'smooth', width:2},
@@ -240,10 +240,10 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.szIndex}"]*/
-  sz.series[0].data.push(/*[[${mdo.open}]]*/);
-  sz.series[1].data.push(/*[[${mdo.close}]]*/);
-  sz.series[2].data.push(/*[[${mdo.high}]]*/);
-  sz.series[3].data.push(/*[[${mdo.low}]]*/);
+  sz.series[0].data.push(/*[[${mdo.close}]]*/);
+  sz.series[1].data.push(/*[[${mdo.sma}]]*/);
+  sz.series[2].data.push(/*[[${mdo.ema}]]*/);
+  sz.series[3].data.push(/*[[${mdo.wma}]]*/);
   sz.xaxis.categories.push(/*[[${mdo.day}]]*/);
   /*[/]*/
   var chartSz = new ApexCharts(document.querySelector("#chart-sz-bg"), sz);
@@ -251,7 +251,7 @@
 
   /***hs300**/
   var hsSB = {
-     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     series: [{name: "close",data: []},{name: "sma-10",data: []},{name: "ema-10",data: []},{name: "wma-10",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'smooth', width:2},
@@ -259,10 +259,10 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.hs300}"]*/
-  hsSB.series[0].data.push(/*[[${mdo.open}]]*/);
-  hsSB.series[1].data.push(/*[[${mdo.close}]]*/);
-  hsSB.series[2].data.push(/*[[${mdo.high}]]*/);
-  hsSB.series[3].data.push(/*[[${mdo.low}]]*/);
+  hsSB.series[0].data.push(/*[[${mdo.close}]]*/);
+  hsSB.series[1].data.push(/*[[${mdo.sma}]]*/);
+  hsSB.series[2].data.push(/*[[${mdo.ema}]]*/);
+  hsSB.series[3].data.push(/*[[${mdo.wma}]]*/);
   hsSB.xaxis.categories.push(/*[[${mdo.day}]]*/);
   /*[/]*/
   var chartHsSB = new ApexCharts(document.querySelector("#chart-hs300-bg"), hsSB);
@@ -270,7 +270,7 @@
 
 /***sz300**/
   var szSB = {
-     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     series: [{name: "close",data: []},{name: "sma-10",data: []},{name: "ema-10",data: []},{name: "wma-10",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
      stroke: {curve: 'smooth', width:2},
@@ -278,10 +278,10 @@
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.sz300}"]*/
-  szSB.series[0].data.push(/*[[${mdo.open}]]*/);
-  szSB.series[1].data.push(/*[[${mdo.close}]]*/);
-  szSB.series[2].data.push(/*[[${mdo.high}]]*/);
-  szSB.series[3].data.push(/*[[${mdo.low}]]*/);
+  szSB.series[0].data.push(/*[[${mdo.close}]]*/);
+  szSB.series[1].data.push(/*[[${mdo.sma}]]*/);
+  szSB.series[2].data.push(/*[[${mdo.ema}]]*/);
+  szSB.series[3].data.push(/*[[${mdo.wma}]]*/);
   szSB.xaxis.categories.push(/*[[${mdo.day}]]*/);
   /*[/]*/
   var chartSzSB = new ApexCharts(document.querySelector("#chart-sz300-bg"), szSB);

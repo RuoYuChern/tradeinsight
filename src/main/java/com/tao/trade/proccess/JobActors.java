@@ -84,10 +84,15 @@ public class JobActors {
             }
             Date lastDeltaDate = stockDao.getDeltaDate(DATA_DATE);
             if((lastDeltaDate == null) || DateHelper.dateEqual(lastDeltaDate, now)){
+                String str = "";
+                if(lastDeltaDate != null){
+                    str = DateHelper.dateToStr("yyyyMMdd", lastDeltaDate);
+                }
+                log.info("lastDeltaDate is null or eq today:{}",str);
                 return;
             }
             Date cureStartDate = DateHelper.afterNDays(lastDeltaDate, 1);
-            Date cureEndDate = getLastTradeDate(cureStartDate, now);
+            Date cureEndDate = DateHelper.getLastTradeDate(tuShareClient, cureStartDate, now);
             if(cureEndDate == null){
                 log.info("new is out of:{}", cureStartDate);
                 return;
@@ -104,9 +109,10 @@ public class JobActors {
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, stockBaseData);
             indicatorCalc.calDelta(strStart, strEnd);
             stockDao.updateDeltaDate(DATA_DATE, cureEndDate);
-
             CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(cureEndDate);
             stockBaseData.updateUpDownTop(cnDownTopDto);
+        }catch (Throwable t){
+            log.info("schedule:", t);
         }finally {
             lock.unlock();
         }
@@ -121,17 +127,6 @@ public class JobActors {
         Thread thread = new Thread(()->handleHistory(), "Load.History");
         thread.setDaemon(true);
         thread.start();
-    }
-
-    private Date getLastTradeDate(Date start, Date now){
-        List<TradeDateVo> list = tuShareClient.trade_cal(DateHelper.dateToStr(TU_DATE_FMT, start), DateHelper.dateToStr(TU_DATE_FMT, now));
-        for(int i = list.size(); i > 0; i--){
-            TradeDateVo vo = list.get(i - 1);
-            if(vo.getIsOpen() == 1){
-                return DateHelper.strToDate("yyyyMMdd", vo.getDate());
-            }
-        }
-        return null;
     }
 
     private void handleHistory(){
@@ -149,7 +144,7 @@ public class JobActors {
             /**插入数据**/
             stockDao.batchInsertStockBasic(basicVoList);
             Date today = new Date();
-            Date endDate = getLastTradeDate(DateHelper.beforeNDays(today, 30), today);
+            Date endDate = DateHelper.getLastTradeDate(tuShareClient, DateHelper.beforeNDays(today, 30), today);
             String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, endDate);
             /**取数据 2020，2021，2022**/
             List<Pair<String,String>> years = new ArrayList<>(3);
@@ -175,7 +170,7 @@ public class JobActors {
             log.info("handleHistory end ......");
         }catch (Throwable t){
             log.info("handleHistory exceptions:", t);
-        }finally{
+        }finally {
             lock.unlock();
         }
     }

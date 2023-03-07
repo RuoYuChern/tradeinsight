@@ -1,13 +1,17 @@
 package com.tao.trade.utils;
 
+import com.tao.trade.infra.TuShareClient;
+import com.tao.trade.infra.vo.TradeDateVo;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class DateHelper {
+    private static String TU_DATE_FMT = "yyyyMMdd";
     public static boolean dateEqual(Date first, Date second){
        return DateUtils.isSameDay(first, second);
     }
@@ -28,6 +32,22 @@ public class DateHelper {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(date.getTime());
         return cal.get(Calendar.HOUR_OF_DAY);
+    }
+
+    public static Date getLastTradeDate(TuShareClient tuShareClient, Date start, Date now){
+        String startDate = DateHelper.dateToStr(TU_DATE_FMT, start);
+        List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TU_DATE_FMT, now));
+        /**逆序**/
+        for(int i = list.size(); i > 0; i--){
+            TradeDateVo vo = list.get(i - 1);
+            if(vo.getIsOpen() == 0){
+                continue;
+            }
+            if(startDate.equals(vo.getDate())){
+                return DateHelper.strToDate("yyyyMMdd", vo.getDate());
+            }
+        }
+        return null;
     }
 
     public static Date afterNDays(Date now, int days){
