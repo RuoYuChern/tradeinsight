@@ -5,5 +5,5 @@
 **/logs
 **/src/etc/generatorConfig.xml
 **/src/main/resources/application.yml
-**/src/main/resources/i18n/messages_zh_CN.properties
+**/src/main/resources/*/messages_zh_CN.properties
 **/**/.DS_Store
