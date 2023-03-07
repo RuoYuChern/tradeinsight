@@ -1,6 +1,8 @@
 package com.tao.trade.proccess;
 
 import com.tao.trade.domain.TaoData;
+import com.tao.trade.facade.CnDownTopDto;
+import com.tao.trade.facade.StockBaseDto;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.vo.StockBasicVo;
@@ -29,15 +31,18 @@ public class JobActors {
     private static String DATA_DATE = "cn.stock";
     private static String TU_DATE_FMT = "yyyyMMdd";
     private Lock lock;
-    @Autowired
-    private CnStockDao stockDao;
-    @Autowired
-    private TuShareClient tuShareClient;
-    @Autowired
-    private TaoData stockBaseData;
+    private final CnStockDao stockDao;
+    private final TuShareClient tuShareClient;
+    private final TaoData stockBaseData;
     private ScheduledExecutorService scheduledActor;
-    public JobActors(){
+
+    @Autowired
+    public JobActors(CnStockDao stockDao, TuShareClient tuShareClient, TaoData stockBaseData){
         lock = new ReentrantLock();
+        this.stockDao = stockDao;
+        this.tuShareClient = tuShareClient;
+        this.stockBaseData = stockBaseData;
+
         ThreadFactory threadFactory = r -> {
             Thread thread = new Thread(r, "batch-sch");
             return thread;
@@ -46,10 +51,29 @@ public class JobActors {
         scheduledActor.scheduleWithFixedDelay(()->schedule(), 60,60, TimeUnit.SECONDS);
     }
 
+    public void loadData(){
+        lock.lock();
+        try{
+            Date lastDate = stockDao.getDeltaDate(DATA_DATE);
+            if((lastDate == null)){
+                log.info("{} is not exist", DATA_DATE);
+                return;
+            }
+            List<StockBasicVo> basicVoList = Help.tryCall(()->tuShareClient.stock_basic("L"));
+            stockBaseData.updateBasic(basicVoList);
+            IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, stockBaseData);
+            CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
+            stockBaseData.updateUpDownTop(cnDownTopDto);
+        }catch (Throwable t){
+            log.info("loadData:{}", t.getMessage());
+        }finally {
+            lock.unlock();
+        }
+    }
 
     private void schedule(){
         try{
-            if(!Help.isHourAfter(16)){
+            if(!DateHelper.isHourAfter(16)){
                 return;
             }
             Date now = new Date();
@@ -58,26 +82,31 @@ public class JobActors {
                 log.info("Does not have initialized");
                 return;
             }
-            Date lastDate = stockDao.getDeltaDate(DATA_DATE);
-            if((lastDate == null) || DateHelper.dateEqual(lastDate, now)){
+            Date lastDeltaDate = stockDao.getDeltaDate(DATA_DATE);
+            if((lastDeltaDate == null) || DateHelper.dateEqual(lastDeltaDate, now)){
                 return;
             }
-            Date startDate = DateHelper.afterNDays(lastDate, 1);
-            if(isOutOf(startDate, now)){
+            Date cureStartDate = DateHelper.afterNDays(lastDeltaDate, 1);
+            Date cureEndDate = getLastTradeDate(cureStartDate, now);
+            if(cureEndDate == null){
+                log.info("new is out of:{}", cureStartDate);
                 return;
             }
             /**判断是否节假日**/
             List<StockBasicVo> basicVoList = tuShareClient.stock_basic("L");
             stockBaseData.updateBasic(basicVoList);
             DataFetcher dataFetcher = new DataFetcher(stockDao, tuShareClient, stockBaseData);
-            String strStart = DateHelper.dateToStr(TU_DATE_FMT, startDate);
-            String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, now);
+            String strStart = DateHelper.dateToStr(TU_DATE_FMT, cureStartDate);
+            String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, cureEndDate);
             log.info("Start to handle:{} to {}", strStart, strEnd);
             dataFetcher.fetchDate(50, strStart, strEnd);
             /**计算指标**/
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, stockBaseData);
             indicatorCalc.calDelta(strStart, strEnd);
-            stockDao.updateDeltaDate(DATA_DATE, now);
+            stockDao.updateDeltaDate(DATA_DATE, cureEndDate);
+
+            CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(cureEndDate);
+            stockBaseData.updateUpDownTop(cnDownTopDto);
         }finally {
             lock.unlock();
         }
@@ -94,16 +123,15 @@ public class JobActors {
         thread.start();
     }
 
-    private boolean isOutOf(Date start, Date now){
-        List<TradeDateVo> list = tuShareClient.trade_cal(DateHelper.dateToStr(TU_DATE_FMT, start),
-                    DateHelper.dateToStr(TU_DATE_FMT, now));
-        int t = 0;
-        for(TradeDateVo vo:list){
+    private Date getLastTradeDate(Date start, Date now){
+        List<TradeDateVo> list = tuShareClient.trade_cal(DateHelper.dateToStr(TU_DATE_FMT, start), DateHelper.dateToStr(TU_DATE_FMT, now));
+        for(int i = list.size(); i > 0; i--){
+            TradeDateVo vo = list.get(i - 1);
             if(vo.getIsOpen() == 1){
-                t++;
+                return DateHelper.strToDate("yyyyMMdd", vo.getDate());
             }
         }
-        return (t == 0);
+        return null;
     }
 
     private void handleHistory(){
@@ -120,11 +148,8 @@ public class JobActors {
             stockBaseData.updateBasic(basicVoList);
             /**插入数据**/
             stockDao.batchInsertStockBasic(basicVoList);
-            Date endDate = new Date();
-            if(!Help.isHourAfter(16)){
-                /**还没收盘，今天的数据放到增量同步**/
-                endDate = DateHelper.afterNDays(endDate, -1);
-            }
+            Date today = new Date();
+            Date endDate = getLastTradeDate(DateHelper.beforeNDays(today, 30), today);
             String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, endDate);
             /**取数据 2020，2021，2022**/
             List<Pair<String,String>> years = new ArrayList<>(3);
@@ -144,7 +169,9 @@ public class JobActors {
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, stockBaseData);
             indicatorCalc.calHistory("20200101", strEnd);
             stockDao.lockSys(LOCK_HISTORY);
+
             stockDao.updateDeltaDate(DATA_DATE, endDate);
+            stockBaseData.updateUpDownTop(indicatorCalc.getDayDownUpTop(endDate));
             log.info("handleHistory end ......");
         }catch (Throwable t){
             log.info("handleHistory exceptions:", t);

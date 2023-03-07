@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{head :: tao-head}"></head>
+<body class="d-flex flex-column h-100">
+<div th:replace="~{tao_header :: tao-head}"></div>
+
+<main role="main" class="flex-shrink-0">
+    <div class="container-fluid">
+        <div class="row row-deck row-cards">
+            <div class="col-sm-12 col-lg-12">
+                <div class="card">
+                    <div class="card-header" th:text="#{trend}">趋势图</div>
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="(${stock} == null)? #{noData} : ${stock}"></h5>
+                        <div id="chart-trend-bg" class="chart-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{tao_footer :: tao-footer}"></div>
+<script th:src="@{/static/js/jquery.slim.min.js}"></script>
+<script th:src="@{/static/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/static/js/apexcharts.min.js}"></script>
+<script th:inline="javascript" type="text/javascript">
+    var trend = {
+    series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
+    {name: "WMA-10",data: []}],
+    chart: {height: 600,type: 'line',zoom: {enabled: false}},
+    dataLabels: {enabled: false},
+    stroke: {curve: 'smooth', width:2},
+    grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+    xaxis: {categories: [],}
+    };
+    /**trend**/
+    /*[# th:each="mdo : ${dailyList}"]*/
+    trend.series[0].data.push(/*[[${mdo.price}]]*/);
+    trend.series[1].data.push(/*[[${mdo.smaPrice}]]*/);
+    trend.series[2].data.push(/*[[${mdo.maPrice}]]*/);
+    trend.series[3].data.push(/*[[${mdo.emaPrice}]]*/);
+    trend.series[4].data.push(/*[[${mdo.wmaPrice}]]*/);
+    trend.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
+    /*[/]*/
+    var chartTrend = new ApexCharts(document.querySelector("#chart-trend-bg"), trend);
+    chartTrend.render();
+</script>
+</body>
+</html>

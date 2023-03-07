@@ -24,8 +24,31 @@ public class DateHelper {
         }
     }
 
+    public static int hours(Date date){
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(date.getTime());
+        return cal.get(Calendar.HOUR_OF_DAY);
+    }
+
     public static Date afterNDays(Date now, int days){
         return DateUtils.addDays(now, days);
+    }
+
+    public static Date beforeNDays(Date now, int days){
+        return DateUtils.addDays(now, -days);
+    }
+
+    public static boolean isHourAfter(int h){
+        return (hours(new Date()) > h);
+    }
+
+    public static Date getDataDate(){
+        Date today = new Date();
+        if(!isHourAfter(16)){
+            /**还没收盘，今天的数据放到增量同步**/
+            today = DateHelper.beforeNDays(today, 1);
+        }
+        return today;
     }
 
     public static Pair<String,String> getOneYearQ(){
@@ -67,7 +90,6 @@ public class DateHelper {
 
     public static Pair<String, String> getOneYearM(){
         Date now = new Date();
-        int month = DateUtils.toCalendar(now).get(Calendar.MONTH) + 1;
         String endM = DateFormatUtils.format(now, "yyyyMM");
         Date lastDay;
         lastDay = DateUtils.addYears(now, -1);

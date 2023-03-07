@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-@FeignClient(name = "TuShare", url = "http://api.tushare.pro")
+@FeignClient(name = "TuShare", url = "http://api.tushare.pro", configuration = TuFeignConfigure.class)
 public interface TuShareApi {
     @RequestMapping(method = RequestMethod.POST, value = "/")
     TuShareRspDto get(TuShareReqDto req);

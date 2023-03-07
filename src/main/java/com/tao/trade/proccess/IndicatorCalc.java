@@ -1,6 +1,8 @@
 package com.tao.trade.proccess;
 
 import com.tao.trade.domain.TaoData;
+import com.tao.trade.facade.CnDownTopDto;
+import com.tao.trade.facade.StockBaseDto;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnStockDaily;
@@ -10,9 +12,11 @@ import com.tao.trade.infra.vo.TradeDateVo;
 import com.tao.trade.ml.TimeSeries;
 import com.tao.trade.utils.DateHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,6 +26,7 @@ public class IndicatorCalc{
     private static String TU_DATE_FMT = "yyyyMMdd";
     private final static int WINDOW_SIZE = 10;
     private final static int MV_SIZE = 200;
+    private final static int MV_DATE_SIZE = 300;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
     private final TaoData stockBaseData;
@@ -30,6 +35,52 @@ public class IndicatorCalc{
         this.stockDao = stockDao;
         this.tuShareClient = tuShareClient;
         this.stockBaseData = stockBaseData;
+    }
+
+    public CnDownTopDto getDayDownUpTop(Date date){
+        List<StockBaseDto> upTopList = new LinkedList<>();
+        List<StockBaseDto> downTopList = new LinkedList<>();
+        CnDownTopDto cnDownTopDto = new CnDownTopDto();
+        cnDownTopDto.setDay(DateHelper.dateToStr("yyyyMMdd", date));
+        cnDownTopDto.setUpTopList(upTopList);
+        cnDownTopDto.setDownTopList(downTopList);
+
+        /**查询股票数据**/
+        List<CnStockDaily> dailyList = stockDao.getDailyBetween(date, DateHelper.afterNDays(date, 1));
+        if(CollectionUtils.isEmpty(dailyList)){
+            log.info("Date:{} is empty", date);
+            return cnDownTopDto;
+        }
+
+        BigDecimal rateLevel = new BigDecimal("0.096");
+        for(CnStockDaily daily:dailyList){
+            BigDecimal diff = daily.getClosePrice().subtract(daily.getOpenPrice());
+            BigDecimal rate = diff.divide(daily.getOpenPrice(), 5, RoundingMode.HALF_DOWN).abs();
+            if(rate.compareTo(rateLevel) < 0){
+                continue;
+            }
+
+            StockBaseDto baseDto = new StockBaseDto();
+            baseDto.setName(daily.getName());
+            StockBasicVo basicVo = stockBaseData.getStockBase(daily.getSymbol());
+            baseDto.setOpen(daily.getOpenPrice());
+            baseDto.setPrice(daily.getClosePrice());
+            baseDto.setTsCode(daily.getSymbol());
+            baseDto.setRate(rate.multiply(BigDecimal.valueOf(100)).setScale(3, RoundingMode.HALF_DOWN));
+            if(basicVo != null) {
+                baseDto.setIndustry(basicVo.getIndustry());
+            }
+            if(diff.compareTo(BigDecimal.ZERO) > 0){
+                baseDto.setFlag("upTop");
+                upTopList.add(baseDto);
+            }else{
+                baseDto.setFlag("downTop");
+                downTopList.add(baseDto);
+            }
+        }
+        log.info("Date={}, up={}, down={}", DateHelper.dateToStr("yyyyMMdd", date), upTopList.size(),
+                downTopList.size());
+        return cnDownTopDto;
     }
 
     public void calHistory(String indStart, String indEnd){
@@ -42,8 +93,9 @@ public class IndicatorCalc{
         Date first = DateHelper.strToDate(TU_DATE_FMT, indStart);
         Date second = DateHelper.strToDate(TU_DATE_FMT, indEnd);
         for(StockBasicVo vo: basicVoList){
-            List<CnStockDaily> dailyList = stockDao.getDailyBetween(vo.getSymbol(), first, second);
+            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getTsCode(), first, second);
             if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
+                log.info("Get symbol={},first={},second={},size={}", vo.getSymbol(), first, second, dailyList.size());
                 continue;
             }
             List<CnStockDailyStat> statList = new LinkedList<>();
@@ -61,8 +113,8 @@ public class IndicatorCalc{
                     dailyStat.setMaPrice(BigDecimal.ZERO);
                 }
                 dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setSmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setWmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+                dailyStat.setSmaPrice(TimeSeries.SMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+                dailyStat.setWmaPrice(TimeSeries.WMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
                 statList.add(dailyStat);
             }
             /**save data**/
@@ -80,7 +132,7 @@ public class IndicatorCalc{
         }
         Date startDate = DateHelper.strToDate(TU_DATE_FMT, indStart);
         Date endDate = DateHelper.strToDate(TU_DATE_FMT, indEnd);
-        Date lowDate = DateHelper.afterNDays(startDate, 365);
+        Date lowDate = DateHelper.beforeNDays(startDate, MV_DATE_SIZE);
         String strLowDate = DateHelper.dateToStr(TU_DATE_FMT, lowDate);
         List<TradeDateVo> dateVoList = tuShareClient.trade_cal(strLowDate, indStart);
         int num = 0;
@@ -97,7 +149,7 @@ public class IndicatorCalc{
         log.info("calDelta:{} to {}, lowDate:{}", indStart, indEnd, strLowDate);
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);
         for (StockBasicVo vo: basicVoList){
-            List<CnStockDaily> dailyList = stockDao.getDailyBetween(vo.getSymbol(), lowDate, endDate);
+            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getSymbol(), lowDate, endDate);
             if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
                 continue;
             }

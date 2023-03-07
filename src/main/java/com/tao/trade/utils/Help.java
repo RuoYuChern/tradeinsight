@@ -1,20 +1,17 @@
 package com.tao.trade.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.thymeleaf.util.DateUtils;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 @Slf4j
 public class Help {
-    public static boolean isHourAfter(int hours){
-        return (DateUtils.hour(new Date()) > hours);
-    }
+    private static final BigDecimal BASE_W = new BigDecimal("10000");
     public static void sleep(int s){
         try{
             Thread.sleep(s * 1000);
@@ -22,6 +19,11 @@ public class Help {
 
         }
     }
+
+    public static BigDecimal baseWan(BigDecimal value){
+        return value.divide(BASE_W, 5, RoundingMode.HALF_DOWN);
+    }
+
 
     public static <T,U> void inverted(List<T> list, U obj, BiConsumer<U,List<T>> setter){
         List<T> nl = new LinkedList<>();
@@ -47,12 +49,26 @@ public class Help {
         setter.accept(obj, nl);
     }
 
-    public static <T> Object call(Callable<Object> callable){
+    public static Object call(Callable<Object> callable){
         try{
             return callable.call();
         }catch (Throwable t){
             log.info("call:{}", t.getMessage());
             return null;
         }
+    }
+
+    public static <T> T tryCall(Callable<T> callable){
+        Throwable exp = null;
+        for(int i = 0; i < 5; i++){
+            try{
+                return callable.call();
+            }catch (Throwable t){
+                exp = t;
+                log.info("call:{}", t.getMessage());
+                Help.sleep(3);
+            }
+        }
+        throw new RuntimeException(exp);
     }
 }

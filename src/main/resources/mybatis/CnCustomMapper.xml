@@ -51,7 +51,7 @@
             profit, shibor, libor, hibor, trade_date,uplimit, downlimit) values (#{item.listing,jdbcType=INTEGER},
             #{item.delisting,jdbcType=INTEGER}, #{item.up,jdbcType=INTEGER}, #{item.down,jdbcType=INTEGER}, #{item.vol,jdbcType=NUMERIC},
             #{item.amount,jdbcType=NUMERIC},#{item.profit,jdbcType=NUMERIC}, #{item.shibor,jdbcType=NUMERIC}, #{item.libor,jdbcType=NUMERIC},
-            #{item.hibor,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}, #{item.upLimit,jdbcType=INTEGER}, #{item.downLimit,jdbcType=INTEGER})
+            #{item.hibor,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}, #{item.uplimit,jdbcType=INTEGER}, #{item.downlimit,jdbcType=INTEGER})
             ON CONFLICT(trade_date) DO NOTHING
         </foreach>
     </insert>

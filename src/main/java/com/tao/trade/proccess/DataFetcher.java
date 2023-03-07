@@ -133,7 +133,7 @@ public class DataFetcher {
     }
 
     private void handleMarketDaily(List<StockDailyVo> dailyVos, Map<String, CnMarketDaily> dailyMap){
-        BigDecimal rateLevel = new BigDecimal("0.96789");
+        BigDecimal rateLevel = new BigDecimal("0.096");
         for(StockDailyVo vo:dailyVos){
             CnMarketDaily marketDaily = dailyMap.get(vo.getDay());
             if(marketDaily == null){
@@ -156,8 +156,8 @@ public class DataFetcher {
             marketDaily.setAmount(marketDaily.getAmount().add(vo.getAmount()));
             marketDaily.setVol(marketDaily.getVol().add(vo.getVol()));
 
-            BigDecimal diff = vo.getClose().subtract(vo.getPreClose());
-            BigDecimal rate = diff.divide(vo.getPreClose(), 5, RoundingMode.HALF_DOWN).abs();
+            BigDecimal diff = vo.getClose().subtract(vo.getOpen());
+            BigDecimal rate = diff.divide(vo.getOpen(), 5, RoundingMode.HALF_DOWN).abs();
             if(diff.compareTo(BigDecimal.ZERO) > 0){
                 marketDaily.setUp(marketDaily.getUp() + 1);
                 if(rate.compareTo(rateLevel) >= 0){

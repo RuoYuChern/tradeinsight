@@ -3,7 +3,7 @@
 /* Not required for template or sticky footer method. */
 
 main > .container-fluid {
-  padding: 15px 15px 15px 15px;
+  padding: 15px;
 }
 
 .footer {
@@ -13,6 +13,33 @@ main > .container-fluid {
 .footer > .container {
   padding-right: 15px;
   padding-left: 15px;
+}
+
+.card{
+   padding: 5px 5px;
+}
+
+.col-sm-6{
+   margin: 5px 0;
+}
+.col-lg-3{
+   margin: 5px 0;
+}
+
+.col-sm-6{
+   margin: 5px 0;
+}
+
+.col-lg-6{
+   margin: 5px 0;
+}
+
+.col-sm-12{
+   margin: 5px 0;
+}
+
+.col-lg-12{
+   margin: 5px 0;
 }
 
 .chart-sm{

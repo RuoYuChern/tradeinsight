@@ -16,8 +16,15 @@ public class DashBoardDto {
     private List<CnCpiDto> cpiDtoList;
     /**PPI**/
     private List<CnPpiDto> ppiDtoList;
+
+    /**上证指数**/
+    private List<DailyDto> shIndex;
+    /**深圳指数**/
+    private List<DailyDto> szIndex;
     /**沪深300**/
-    private List<IndexDailyDto> hsIndex;
+    private List<DailyDto> hs300;
+    /**深圳300**/
+    private List<DailyDto> sz300;
 
     /**深圳市场**/
     private List<DailyInfoDto> szMarket;

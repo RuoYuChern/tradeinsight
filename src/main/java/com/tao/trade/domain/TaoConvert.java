@@ -2,6 +2,7 @@ package com.tao.trade.domain;
 
 import com.tao.trade.facade.*;
 import com.tao.trade.infra.db.model.CnMarketDaily;
+import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,4 +21,8 @@ public interface TaoConvert {
 
     IndexDailyDto fromDailyIndex(IndexDailyVo vo);
     DailyInfoDto fromDailyInfo(DailyInfoVo vo);
+    DailyDto fromSinaDaily(SinaDailyVo vo);
+
+    @Mapping(source = "tradeDate", target = "tradeDate", dateFormat="yyyyMMdd")
+    CnStockDailyDto fromDailyStat(CnStockDailyStat dailyStat);
 }

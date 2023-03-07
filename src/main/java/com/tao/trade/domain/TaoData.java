@@ -4,8 +4,10 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.tao.trade.facade.*;
 import com.tao.trade.infra.CnStockDao;
+import com.tao.trade.infra.SinaClient;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnMarketDaily;
+import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.*;
 import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
@@ -14,12 +16,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,13 +27,18 @@ import java.util.concurrent.atomic.AtomicReference;
 @Service
 @Slf4j
 public class TaoData {
-    private final static int MAX_DATE = -60;
+    private final static int MAX_DATE = 60;
 
     @Autowired
     private CnStockDao dao;
     @Autowired
     private TuShareClient tuShareClient;
+    @Autowired
+    private SinaClient sinaClient;
     private AtomicReference<List<StockBasicVo>> basicVoList;
+    private volatile Map<String, StockBasicVo> basicVoMap;
+    private volatile Map<String, String> nameTsCode;
+    private AtomicReference<CnDownTopDto> cnDownTopDto;
     private Cache<String, Object> marketDaily;
     public TaoData(){
         basicVoList = new AtomicReference<>();
@@ -42,17 +47,87 @@ public class TaoData {
                 .maximumSize(15)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build();
+        cnDownTopDto = new AtomicReference<>();
+    }
+
+    public CnDownTopDto getupDownTop(){
+        CnDownTopDto dto = cnDownTopDto.get();
+        if(dto == null){
+            dto = new CnDownTopDto();
+            dto.setDownTopList(new ArrayList<>());
+            dto.setUpTopList(new ArrayList<>());
+            dto.setDay(DateHelper.dateToStr("yyyyMMdd", new Date()));
+        }
+        return dto;
+    }
+
+    public List<CnStockDailyDto> getSymbol(String tsCode){
+        int limit = 100;
+        List<CnStockDailyStat> dailyStats = dao.getSymbolStat(tsCode, limit);
+        List<CnStockDailyDto> dailyDtoList = new ArrayList<>();
+        if(!CollectionUtils.isEmpty(dailyStats)) {
+            int startOffset = ((dailyStats.size() > limit) ? (dailyStats.size() - limit) : 0);
+            for(; startOffset < dailyStats.size(); startOffset++){
+                CnStockDailyDto dto = TaoConvert.CONVERT.fromDailyStat(dailyStats.get(startOffset));
+                dailyDtoList.add(dto);
+            }
+        }
+        return dailyDtoList;
+    }
+
+    public String getStockName(String tsCode){
+        if(basicVoMap != null){
+            StockBasicVo vo = basicVoMap.get(tsCode);
+            if(vo != null){
+                return vo.getName();
+            }
+        }
+        return null;
+    }
+
+    public List<CnStockDailyDto> getByName(String name){
+        if(nameTsCode == null){
+            log.info("nameTsCode is null");
+            return null;
+        }
+        String tsCode = nameTsCode.get(name);
+        if(!StringUtils.hasLength(tsCode)){
+            log.info("Can not find ts code for:{}", Base64.getEncoder().encodeToString(name.getBytes()));
+            return null;
+        }
+        log.info("tsCode:{}", tsCode);
+        return getSymbol(tsCode);
+    }
+
+    public void updateUpDownTop(CnDownTopDto newList){
+        cnDownTopDto.set(newList);
     }
 
     public void updateBasic(List<StockBasicVo> voList){
         basicVoList.set(voList);
+        Map<String, StockBasicVo> tmp = new HashMap<>();
+        Map<String, String> nameMap = new HashMap<>();
+        for(StockBasicVo vo: voList){
+            tmp.put(vo.getTsCode(), vo);
+            nameMap.put(vo.getName(), vo.getTsCode());
+        }
+        basicVoMap = tmp;
+        nameTsCode = nameMap;
+    }
+
+    public StockBasicVo getStockBase(String tsCode){
+        if(basicVoMap == null){
+            log.info("basicVoMap is null");
+            return null;
+        }
+        return basicVoMap.get(tsCode);
     }
 
     public DashBoardDto getDashBoard(){
         DashBoardDto boardDto = new DashBoardDto();
 
-        Date today = new Date();
-        Date last30 = DateHelper.afterNDays(today, MAX_DATE);
+        Date today = DateHelper.getDataDate();
+        Date last30 = DateHelper.beforeNDays(today, MAX_DATE);
         Pair<String, String> yearMonth = DateHelper.getOneYearM();
         String tradeDate = DateHelper.dateToStr("yyyyMMdd", last30);
 
@@ -66,13 +141,38 @@ public class TaoData {
             boardDto.setMarketDailyList(new ArrayList<>());
         }
 
-        /**沪深300指数**/
-        callable = ()->marketDaily.get(String.format("DI-%s", tradeDate),()->loadDailyIndex(tradeDate));
+        callable = ()->marketDaily.get(String.format("DISH-%s", tradeDate),()->loadDailyIndex(StockIndexName.SH));
         obj = Help.call(callable);
         if(obj != null){
-            boardDto.setHsIndex((List<IndexDailyDto>) obj);
+            boardDto.setShIndex((List<DailyDto>) obj);
         }else{
-            boardDto.setHsIndex(new ArrayList<>());
+            boardDto.setShIndex(new ArrayList<>());
+        }
+
+        callable = ()->marketDaily.get(String.format("DISZ-%s", tradeDate),()->loadDailyIndex(StockIndexName.SZ));
+        obj = Help.call(callable);
+        if(obj != null){
+            boardDto.setSzIndex((List<DailyDto>) obj);
+        }else{
+            boardDto.setSzIndex(new ArrayList<>());
+        }
+
+        /**沪深300指数**/
+        callable = ()->marketDaily.get(String.format("HS300-%s", tradeDate),()->loadDailyIndex(StockIndexName.HS_300));
+        obj = Help.call(callable);
+        if(obj != null){
+            boardDto.setHs300((List<DailyDto>) obj);
+        }else{
+            boardDto.setHs300(new ArrayList<>());
+        }
+
+        /**沪深300指数**/
+        callable = ()->marketDaily.get(String.format("SZ300-%s", tradeDate),()->loadDailyIndex(StockIndexName.SZ_300));
+        obj = Help.call(callable);
+        if(obj != null){
+            boardDto.setSz300((List<DailyDto>) obj);
+        }else{
+            boardDto.setSz300(new ArrayList<>());
         }
 
         /**市场交易统计**/
@@ -120,19 +220,21 @@ public class TaoData {
         return boardDto;
     }
 
-    private List<IndexDailyDto> loadDailyIndex(String tradeDate){
-        String endDate = DateHelper.dateToStr("yyyyMMdd", new Date());
-        log.info("loadDailyIndex between:{},{}", tradeDate, endDate);
+    private List<DailyDto> loadDailyIndex(String symbol){
+        log.info("loadDailyIndex symbol:{}", symbol);
         try {
-            List<IndexDailyVo> list = tuShareClient.getDailyIndex("000300.SH", tradeDate, endDate);
+            List<SinaDailyVo> list = sinaClient.getSymbolDaily(symbol, 240, "no", 30);
             if(list.size() > 30){
                 list = list.subList(0, 30);
             }
-            List<IndexDailyDto> indexList = new ArrayList<>(30);
-            for (int i = list.size(); i > 0; i--) {
-                indexList.add(TaoConvert.CONVERT.fromDailyIndex(list.get(i - 1)));
+            List<DailyDto> indexList = new ArrayList<>(30);
+            for (SinaDailyVo vo: list) {
+                if(StringUtils.hasLength(vo.getDay())){
+                    vo.setDay(vo.getDay().replace("-",""));
+                }
+                indexList.add(TaoConvert.CONVERT.fromSinaDaily(vo));
             }
-            log.info("Load dailyIndex between:{},{},size:{}", tradeDate, endDate, indexList.size());
+            log.info("loadDailyIndex symbol:{},size:{}", symbol, indexList.size());
             return indexList;
         }catch (Throwable t){
             return null;
@@ -141,7 +243,7 @@ public class TaoData {
 
     private List<DailyInfoDto> loadDailyInfo(String tradeDate){
         String endDate = DateHelper.dateToStr("yyyyMMdd", new Date());
-        log.info("loadDailyIndex between:{},{}", tradeDate, endDate);
+        log.info("loadDailyInfo between:{},{}", tradeDate, endDate);
         try {
             List<DailyInfoVo> list = tuShareClient.getDailyInfo(tradeDate, endDate);
             List<DailyInfoDto> indexList = new ArrayList<>();
@@ -218,6 +320,9 @@ public class TaoData {
         for (; offset < cnMarketDailyList.size(); offset++){
             MarketDailyDto dto = TaoConvert.CONVERT.fromMarket(cnMarketDailyList.get(offset));
             dto.setMood(BigDecimal.ZERO);
+            dto.setAmount(Help.baseWan(dto.getAmount()));
+            dto.setVol(Help.baseWan(dto.getVol()));
+            dto.setProfit(Help.baseWan(dto.getProfit()));
             list.add(dto);
         }
         log.info("loadMarketDaily:{},size:{}", key, list.size());

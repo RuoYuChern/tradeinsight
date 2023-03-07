@@ -1,14 +1,20 @@
 package com.tao.trade.mvc.taohome;
 
 import com.tao.trade.domain.TaoData;
+import com.tao.trade.facade.CnDownTopDto;
+import com.tao.trade.facade.CnStockDailyDto;
 import com.tao.trade.facade.DashBoardDto;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
 
 @Controller
 @Slf4j
@@ -19,8 +25,6 @@ public class Tao {
     private TaoData taoData;
     @GetMapping({"/","","index"})
     public String home(Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
         DashBoardDto dashBoard = taoData.getDashBoard();
         model.addAttribute("dashBoard", dashBoard);
         return String.format("%s/home", prefix);
@@ -28,8 +32,6 @@ public class Tao {
 
     @GetMapping({"/detail"})
     public String homeDetail(@RequestParam(name="page", required = false) Integer num, Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
         DashBoardDto dashBoard = taoData.getDashBoard();
         if(num == null){
             num = Integer.valueOf("1");
@@ -64,29 +66,60 @@ public class Tao {
 
     @GetMapping({"/rebound"})
     public String rebound(Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
         return String.format("%s/rebound", prefix);
     }
 
     @GetMapping({"/recommend"})
     public String recommend(Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
+        CnDownTopDto topDto = taoData.getupDownTop();
+        model.addAttribute("topDownDto", topDto);
         return String.format("%s/recommend", prefix);
     }
 
     @GetMapping({"/market-sentiment"})
     public String marketSentiment(Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
         return String.format("%s/market-sentiment", prefix);
     }
 
     @GetMapping({"/crypto-market"})
     public String cryptoMarket(Model model){
-        model.addAttribute("title", "TradeInsight");
-        model.addAttribute("company","Tao");
         return String.format("%s/crypto-market", prefix);
+    }
+
+    @GetMapping({"/symbol-go"})
+    public String symbolGo(@RequestParam(name="tsCode") String tsCode, Model model){
+        List<CnStockDailyDto> dailyList = taoData.getSymbol(tsCode);
+        model.addAttribute("stock", taoData.getStockName(tsCode));
+        model.addAttribute("dailyList", dailyList);
+        return String.format("%s/symbol-go.html", prefix);
+    }
+
+    @GetMapping({"/view-symbol"})
+    public String viewSymbol(@RequestParam(name="stock", required = false) String stock, Model model){
+        if(StringUtils.hasLength(stock)){
+            stock = stock.trim();
+            List<CnStockDailyDto> dailyList = taoData.getByName(stock);
+            model.addAttribute("stock", stock);
+            model.addAttribute("dailyList", dailyList);
+        }
+        return String.format("%s/view-symbol.html", prefix);
+    }
+
+    @GetMapping({"/view-vs"})
+    public String viewVs(@RequestParam(name="first", required = false) String first,
+                         @RequestParam(name="second", required = false) String second, Model model){
+        if(StringUtils.hasLength(first) && StringUtils.hasLength(second)){
+            first = first.trim();
+            second = second.trim();
+            List<CnStockDailyDto> firstList = taoData.getByName(first);
+            List<CnStockDailyDto> secondList = taoData.getByName(second);
+            if(!CollectionUtils.isEmpty(firstList) && !CollectionUtils.isEmpty(secondList)){
+                model.addAttribute("first", first);
+                model.addAttribute("firstList", firstList);
+                model.addAttribute("second", second);
+                model.addAttribute("secondList", secondList);
+            }
+        }
+        return String.format("%s/view-vs.html", prefix);
     }
 }

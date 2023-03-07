@@ -9,13 +9,13 @@
    <div class="row row-deck row-cards">
     <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">成交金额/量(千元/手)</div>
+      <div class="card-header">成交金额/量(亿元/万手)</div>
       <div id="chart-amount-bg" class="chart-sm"></div>
      </div>
     </div>
     <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">资金变动(千元)</div>
+      <div class="card-header">资金变动(亿元)</div>
       <div id="chart-profit-bg" class="chart-sm"></div>
      </div>
     </div>
@@ -43,24 +43,42 @@
      <div id="chart-listing-bg" class="chart-sm"></div>
     </div>
    </div>
-   <div class="col-sm-6 col-lg-3">
-    <div class="card">
-     <div class="card-header">市场情绪</div>
-     <div id="chart-mood-bg" class="chart-sm"></div>
-    </div>
-   </div>
-    <div class="col-sm-6 col-lg-6">
+
+    <div class="col-sm-6 col-lg-3">
      <div class="card">
-      <div class="card-header">上海市场</div>
-      <div id="chart-hs-market-bg" class="chart-sm"></div>
+      <div class="card-header">上证指数</div>
+      <div id="chart-sh-bg" class="chart-sm"></div>
      </div>
     </div>
-    <div class="col-sm-6 col-lg-6">
+
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">深证成指</div>
+      <div id="chart-sz-bg" class="chart-sm"></div>
+     </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
      <div class="card">
       <div class="card-header">沪深300</div>
       <div id="chart-hs300-bg" class="chart-sm"></div>
      </div>
     </div>
+
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">深证300</div>
+      <div id="chart-sz300-bg" class="chart-sm"></div>
+     </div>
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+     <div class="card">
+      <div class="card-header">市场情绪</div>
+      <div id="chart-mood-bg" class="chart-sm"></div>
+     </div>
+    </div>
+
     <div class="col-sm-6 col-lg-6">
      <div class="card">
       <div class="card-header">GDP(亿元)</div>
@@ -97,8 +115,8 @@
      series: [{name: "amount",data: []},{name: "vol",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /**Amount**/
@@ -115,8 +133,8 @@
      series: [{name: "profit",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
@@ -131,8 +149,8 @@
      series: [{name: "up",data: []},{name: "down",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
@@ -148,8 +166,8 @@
      series: [{name: "upLimit",data: []},{name: "downLimit",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
@@ -166,8 +184,8 @@
      series: [{name: "shibor",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
@@ -182,8 +200,8 @@
      series: [{name: "listing",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/
@@ -193,64 +211,89 @@
   var chartList = new ApexCharts(document.querySelector("#chart-listing-bg"), listing);
   chartList.render();
 
-  /***上证指数***/
-  var shMarket = {
-     series: [{name: '挂牌数',type: 'column',data: []}, {name: '交易金额',type: 'column',data: []}, {
-          name: '成交量',type: 'line',data: []}],
-     chart: {height: 200,type: 'line',stacked: false},
+  /***sh**/
+  var sh = {
+     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {width: [1, 1, 4]},
-     title: {text: 'SH_MARKET',align: 'left',offsetX: 110},
-     xaxis: {categories: [],},
-     yaxis: [{axisTicks: {show: true,},axisBorder: {show: true,color: '#008FFB'},
-            labels: {style: {colors: '#008FFB',}},
-            title: {text: "挂牌数",style: {color: '#008FFB',}},
-            tooltip: {enabled: true}},{seriesName: '挂牌数',opposite: true,axisTicks: {show: true,},
-            axisBorder: {show: true,color: '#00E396'},labels: {style: {colors: '#00E396',}},
-            title: {text: "交易金额(亿元)",style: {color: '#00E396',}},},{
-            seriesName: '成交量',opposite: true,axisTicks: {show: true,},
-            axisBorder: {show: true,color: '#FEB019'},
-            labels: {style: {colors: '#FEB019',},},title: {text: "成交量(亿股)",
-              style: {color: '#FEB019',}}},
-        ],
-     tooltip: {fixed: {enabled: true,position: 'topLeft', offsetY: 30,offsetX: 60},},
-     legend: {horizontalAlign: 'left',offsetX: 40}
-     };
-  /*[# th:each="mdo : ${dashBoard.shMARKET}"]*/
-  shMarket.series[0].data.push(/*[[${mdo.comCount}]]*/);
-  shMarket.series[1].data.push(/*[[${mdo.amount}]]*/);
-  shMarket.series[2].data.push(/*[[${mdo.vol}]]*/);
-  shMarket.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
-  /*[/]*/
-  var chartSM = new ApexCharts(document.querySelector("#chart-hs-market-bg"), shMarket);
-  chartSM.render();
-
-  /***hushen300***/
-  var hs = {
-      series: [{name: '换手率(自由)',type: 'column',data: []}, {name: '换手率',type: 'line',data: []}],
-      chart: {height: 200,type: 'line',},
-      stroke: {width: [0, 4]},
-      title: {text: ''},
-      dataLabels: {enabled: true,enabledOnSeries: [1]},
-      labels: [],
-      xaxis: {type: ''},
-      yaxis: [{title: {text: '换手率(自由)',},}, {opposite: true,title: {text: '换手率'}}]
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+     xaxis: {categories: [],}
   };
-  /*[# th:each="mdo : ${dashBoard.hsIndex}"]*/
-  hs.series[0].data.push(/*[[${mdo.turnoverRateFree}]]*/);
-  hs.series[1].data.push(/*[[${mdo.turnoverRate}]]*/);
-  hs.labels.push(/*[[${mdo.tradeDate}]]*/);
+  /*[# th:each="mdo : ${dashBoard.shIndex}"]*/
+  sh.series[0].data.push(/*[[${mdo.open}]]*/);
+  sh.series[1].data.push(/*[[${mdo.close}]]*/);
+  sh.series[2].data.push(/*[[${mdo.high}]]*/);
+  sh.series[3].data.push(/*[[${mdo.low}]]*/);
+  sh.xaxis.categories.push(/*[[${mdo.day}]]*/);
   /*[/]*/
-  var chartH3 = new ApexCharts(document.querySelector("#chart-hs300-bg"), hs);
-  chartH3.render();
+  var chartSh = new ApexCharts(document.querySelector("#chart-sh-bg"), sh);
+  chartSh.render();
+
+  /***sz**/
+  var sz = {
+     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.szIndex}"]*/
+  sz.series[0].data.push(/*[[${mdo.open}]]*/);
+  sz.series[1].data.push(/*[[${mdo.close}]]*/);
+  sz.series[2].data.push(/*[[${mdo.high}]]*/);
+  sz.series[3].data.push(/*[[${mdo.low}]]*/);
+  sz.xaxis.categories.push(/*[[${mdo.day}]]*/);
+  /*[/]*/
+  var chartSz = new ApexCharts(document.querySelector("#chart-sz-bg"), sz);
+  chartSz.render();
+
+  /***hs300**/
+  var hsSB = {
+     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.hs300}"]*/
+  hsSB.series[0].data.push(/*[[${mdo.open}]]*/);
+  hsSB.series[1].data.push(/*[[${mdo.close}]]*/);
+  hsSB.series[2].data.push(/*[[${mdo.high}]]*/);
+  hsSB.series[3].data.push(/*[[${mdo.low}]]*/);
+  hsSB.xaxis.categories.push(/*[[${mdo.day}]]*/);
+  /*[/]*/
+  var chartHsSB = new ApexCharts(document.querySelector("#chart-hs300-bg"), hsSB);
+  chartHsSB.render();
+
+/***sz300**/
+  var szSB = {
+     series: [{name: "open",data: []},{name: "close",data: []},{name: "high",data: []},{name: "low",data: []}],
+     chart: {height: 200,type: 'line',zoom: {enabled: false}},
+     dataLabels: {enabled: false},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+     xaxis: {categories: [],}
+  };
+  /*[# th:each="mdo : ${dashBoard.sz300}"]*/
+  szSB.series[0].data.push(/*[[${mdo.open}]]*/);
+  szSB.series[1].data.push(/*[[${mdo.close}]]*/);
+  szSB.series[2].data.push(/*[[${mdo.high}]]*/);
+  szSB.series[3].data.push(/*[[${mdo.low}]]*/);
+  szSB.xaxis.categories.push(/*[[${mdo.day}]]*/);
+  /*[/]*/
+  var chartSzSB = new ApexCharts(document.querySelector("#chart-sz300-bg"), szSB);
+  chartSzSB.render();
 
   /**mood**/
   var mood = {
      series: [{name: "mood",data: []}],
      chart: {height: 200,type: 'line',zoom: {enabled: false}},
      dataLabels: {enabled: false},
-     stroke: {curve: 'straight'},
-     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.5},},
+     stroke: {curve: 'smooth', width:2},
+     grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
      xaxis: {categories: [],}
   };
   /*[# th:each="mdo : ${dashBoard.marketDailyList}"]*/

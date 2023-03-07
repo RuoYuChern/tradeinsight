@@ -6,6 +6,7 @@ import com.tao.trade.infra.db.model.*;
 import com.tao.trade.infra.vo.StockBasicVo;
 import com.tao.trade.infra.vo.StockDailyVo;
 import com.tao.trade.infra.vo.StockIpoVo;
+import com.tao.trade.utils.DateHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -162,10 +163,17 @@ public class CnStockDao {
         return customMapper.insertOrUpdateDelta(deltaDate);
     }
 
-    public List<CnStockDaily> getDailyBetween(String symbol, Date startDate, Date endDate){
+    public List<CnStockDaily> getSymbolDailyBetween(String symbol, Date startDate, Date endDate){
         CnStockDailyExample example = new CnStockDailyExample();
         example.createCriteria().andSymbolEqualTo(symbol)
                 .andTradeDateBetween(startDate, endDate);
+        example.setOrderByClause("trade_date ASC");
+        return dailyMapper.selectByExample(example);
+    }
+
+    public List<CnStockDaily> getDailyBetween(Date startDate, Date endDate){
+        CnStockDailyExample example = new CnStockDailyExample();
+        example.createCriteria().andTradeDateBetween(startDate, endDate);
         example.setOrderByClause("trade_date ASC");
         return dailyMapper.selectByExample(example);
     }
@@ -179,6 +187,15 @@ public class CnStockDao {
         }else{
             return null;
         }
+    }
+
+    public List<CnStockDailyStat> getSymbolStat(String tsCode, int limit){
+        Date lowDate = DateHelper.beforeNDays(new Date(), limit);
+        CnStockDailyStatExample example = new CnStockDailyStatExample();
+        example.createCriteria().andSymbolEqualTo(tsCode).andTradeDateGreaterThan(lowDate);
+        example.setOrderByClause("trade_date asc");
+        List<CnStockDailyStat> statList = dailyStatMapper.selectByExample(example);
+        return statList;
     }
 
     public Date getDeltaDate(String symbol){
