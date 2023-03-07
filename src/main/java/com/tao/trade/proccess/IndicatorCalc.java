@@ -129,7 +129,7 @@ public class IndicatorCalc{
         }
         Date startDate = DateHelper.strToDate(TU_DATE_FMT, indStart);
         Date endDate = DateHelper.strToDate(TU_DATE_FMT, indEnd);
-        Date lowDate = DateHelper.getLastTradeDate(tuShareClient, DateHelper.beforeNDays(startDate, MV_DATE_SIZE), startDate);
+        Date lowDate = DateHelper.getLessDay(tuShareClient, DateHelper.beforeNDays(startDate, MV_DATE_SIZE), startDate);
         String strLowDate = DateHelper.dateToStr(TU_DATE_FMT, lowDate);
         log.info("calDelta:{} to {}, lowDate:{}", indStart, indEnd, strLowDate);
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);

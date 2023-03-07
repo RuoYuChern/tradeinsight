@@ -2,11 +2,9 @@ package com.tao.trade.proccess;
 
 import com.tao.trade.domain.TaoData;
 import com.tao.trade.facade.CnDownTopDto;
-import com.tao.trade.facade.StockBaseDto;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.vo.StockBasicVo;
-import com.tao.trade.infra.vo.TradeDateVo;
 import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
@@ -92,7 +90,7 @@ public class JobActors {
                 return;
             }
             Date cureStartDate = DateHelper.afterNDays(lastDeltaDate, 1);
-            Date cureEndDate = DateHelper.getLastTradeDate(tuShareClient, cureStartDate, now);
+            Date cureEndDate = DateHelper.getBiggerDate(tuShareClient, cureStartDate, now);
             if(cureEndDate == null){
                 log.info("new is out of:{}", cureStartDate);
                 return;
@@ -144,7 +142,7 @@ public class JobActors {
             /**插入数据**/
             stockDao.batchInsertStockBasic(basicVoList);
             Date today = new Date();
-            Date endDate = DateHelper.getLastTradeDate(tuShareClient, DateHelper.beforeNDays(today, 30), today);
+            Date endDate = DateHelper.getBiggerDate(tuShareClient, DateHelper.beforeNDays(today, 30), today);
             String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, endDate);
             /**取数据 2020，2021，2022**/
             List<Pair<String,String>> years = new ArrayList<>(3);
