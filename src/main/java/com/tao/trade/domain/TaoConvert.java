@@ -16,13 +16,13 @@ public interface TaoConvert {
     GDPDto   fromGdp(GdpVo gdpVo);
     MoneyQuantityDto fromMoney(MoneySupplyVo vo);
 
-    @Mapping(source = "tradeDate", target = "date", dateFormat="yyyyMMdd")
+    @Mapping(source = "tradeDate", target = "date", dateFormat="MMdd")
     MarketDailyDto fromMarket(CnMarketDaily daily);
 
     IndexDailyDto fromDailyIndex(IndexDailyVo vo);
     DailyInfoDto fromDailyInfo(DailyInfoVo vo);
     DailyDto fromSinaDaily(SinaDailyVo vo);
 
-    @Mapping(source = "tradeDate", target = "tradeDate", dateFormat="yyyyMMdd")
+    @Mapping(source = "tradeDate", target = "tradeDate", dateFormat="MMdd")
     CnStockDailyDto fromDailyStat(CnStockDailyStat dailyStat);
 }

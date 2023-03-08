@@ -100,7 +100,9 @@ public class Tao {
             stock = stock.trim();
             List<CnStockDailyDto> dailyList = taoData.getByName(stock);
             model.addAttribute("stock", stock);
-            model.addAttribute("dailyList", dailyList);
+            if(!CollectionUtils.isEmpty(dailyList)) {
+                model.addAttribute("dailyList", dailyList);
+            }
         }
         return String.format("%s/view-symbol.html", prefix);
     }

@@ -64,7 +64,7 @@ public class TaoData {
     }
 
     public List<CnStockDailyDto> getSymbol(String tsCode){
-        int limit = 100;
+        int limit = 150;
         List<CnStockDailyStat> dailyStats = dao.getSymbolStat(tsCode, limit);
         List<CnStockDailyDto> dailyDtoList = new ArrayList<>();
         if(!CollectionUtils.isEmpty(dailyStats)) {

@@ -11,8 +11,6 @@ public class WebConfig {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean(new TaoFilter());
         //过滤所有路径
         registrationBean.addUrlPatterns("/*");
-        //添加不过滤路径
-        //registrationBean.addInitParameter("noFilter","/one,/two");
         registrationBean.setName("taoFilter");
         return registrationBean;
     }
