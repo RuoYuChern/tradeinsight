@@ -29,6 +29,7 @@ public class JobActors {
     private static String DATA_DATE = "cn.stock";
     private static String TU_DATE_FMT = "yyyyMMdd";
     private Lock lock;
+    private volatile boolean isDeltaDone;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
     private final TaoData stockBaseData;
@@ -37,21 +38,19 @@ public class JobActors {
     @Autowired
     public JobActors(CnStockDao stockDao, TuShareClient tuShareClient, TaoData stockBaseData){
         lock = new ReentrantLock();
+        this.isDeltaDone = false;
         this.stockDao = stockDao;
         this.tuShareClient = tuShareClient;
         this.stockBaseData = stockBaseData;
 
-        ThreadFactory threadFactory = r -> {
-            Thread thread = new Thread(r, "batch-sch");
-            return thread;
-        };
+        ThreadFactory threadFactory = r -> {Thread thread = new Thread(r, "batch-sch");return thread;};
         scheduledActor = Executors.newSingleThreadScheduledExecutor(threadFactory);
-        scheduledActor.scheduleWithFixedDelay(()->schedule(), 60,60, TimeUnit.SECONDS);
+        scheduledActor.scheduleWithFixedDelay(()->schedule(), 60,300, TimeUnit.SECONDS);
     }
 
     public void loadData(){
-        lock.lock();
         try{
+            lock.lock();
             Date lastDate = stockDao.getDeltaDate(DATA_DATE);
             if((lastDate == null)){
                 log.info("{} is not exist", DATA_DATE);
@@ -62,9 +61,11 @@ public class JobActors {
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, stockBaseData);
             CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
             stockBaseData.updateUpDownTop(cnDownTopDto);
+            log.info("loadData finish");
         }catch (Throwable t){
             log.info("loadData:{}", t.getMessage());
         }finally {
+            log.info("loadData unlock");
             lock.unlock();
         }
     }
@@ -72,8 +73,13 @@ public class JobActors {
     private void schedule(){
         try{
             if(!DateHelper.isHourAfter(16)){
+                isDeltaDone = false;
                 return;
             }
+            if(isDeltaDone){
+                return;
+            }
+            log.info("schedule start");
             Date now = new Date();
             lock.lock();
             if(!stockDao.hasLocked(LOCK_HISTORY)){
@@ -85,6 +91,8 @@ public class JobActors {
                 String str = "";
                 if(lastDeltaDate != null){
                     str = DateHelper.dateToStr("yyyyMMdd", lastDeltaDate);
+                    isDeltaDone = true;
+                    log.info("set : isDeltaDone{}", isDeltaDone);
                 }
                 log.info("lastDeltaDate is null or eq today:{}",str);
                 return;
@@ -109,9 +117,12 @@ public class JobActors {
             stockDao.updateDeltaDate(DATA_DATE, cureEndDate);
             CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(cureEndDate);
             stockBaseData.updateUpDownTop(cnDownTopDto);
+            log.info("schedule finish");
+            isDeltaDone = true;
         }catch (Throwable t){
             log.info("schedule:", t);
         }finally {
+            log.info("schedule unlock");
             lock.unlock();
         }
     }
@@ -169,6 +180,7 @@ public class JobActors {
         }catch (Throwable t){
             log.info("handleHistory exceptions:", t);
         }finally {
+            log.info("handleHistory unlock");
             lock.unlock();
         }
     }

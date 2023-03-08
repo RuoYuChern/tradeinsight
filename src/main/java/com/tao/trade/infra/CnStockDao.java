@@ -148,7 +148,8 @@ public class CnStockDao {
                 batchList.clear();
             }
         }
-        if(batchList.size() >= 50){
+
+        if(batchList.size() > 0){
             customMapper.batchInsertDailyStat(batchList);
             batchList.clear();
         }

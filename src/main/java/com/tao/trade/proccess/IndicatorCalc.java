@@ -44,6 +44,7 @@ public class IndicatorCalc{
         cnDownTopDto.setDownTopList(downTopList);
 
         /**查询股票数据**/
+        log.info("Get top:{}", cnDownTopDto.getDay());
         List<CnStockDaily> dailyList = stockDao.getDailyBetween(date, DateHelper.afterNDays(date, 1));
         if(CollectionUtils.isEmpty(dailyList)){
             log.info("Date:{} is empty", date);
@@ -89,13 +90,13 @@ public class IndicatorCalc{
         log.info("calHistory:{} to {}", indStart, indEnd);
         Date first = DateHelper.strToDate(TU_DATE_FMT, indStart);
         Date second = DateHelper.strToDate(TU_DATE_FMT, indEnd);
+        List<CnStockDailyStat> statList = new LinkedList<>();
         for(StockBasicVo vo: basicVoList){
             List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getTsCode(), first, second);
             if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
                 log.info("Get symbol={},first={},second={},size={}", vo.getSymbol(), first, second, dailyList.size());
                 continue;
             }
-            List<CnStockDailyStat> statList = new LinkedList<>();
             for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
                 CnStockDailyStat dailyStat = new CnStockDailyStat();
                 CnStockDaily stockDaily = dailyList.get(pos);
@@ -115,9 +116,14 @@ public class IndicatorCalc{
                 statList.add(dailyStat);
             }
             /**save data**/
-            if(statList.size() > 0) {
+            if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
+                statList.clear();
             }
+        }
+        if(statList.size() > 0) {
+            stockDao.batchInsertDailyStat(statList);
+            statList.clear();
         }
     }
 
@@ -132,13 +138,15 @@ public class IndicatorCalc{
         Date lowDate = DateHelper.getLessDay(tuShareClient, DateHelper.beforeNDays(startDate, MV_DATE_SIZE), startDate);
         String strLowDate = DateHelper.dateToStr(TU_DATE_FMT, lowDate);
         log.info("calDelta:{} to {}, lowDate:{}", indStart, indEnd, strLowDate);
+        int size = 0;
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);
+        List<CnStockDailyStat> statList = new LinkedList<>();
         for (StockBasicVo vo: basicVoList){
-            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getSymbol(), lowDate, endDate);
+            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getTsCode(), lowDate, endDate);
             if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
                 continue;
             }
-            List<CnStockDailyStat> statList = new LinkedList<>();
+
             for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
                 /**比较时间**/
                 CnStockDaily stockDaily = dailyList.get(pos);
@@ -160,9 +168,17 @@ public class IndicatorCalc{
                 statList.add(dailyStat);
             }
             /**save data**/
-            if(statList.size() > 0) {
+            if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
+                statList.clear();
+                size += statList.size();
             }
         }
+        if(statList.size() > 0) {
+            stockDao.batchInsertDailyStat(statList);
+            statList.clear();
+            size += statList.size();
+        }
+        log.info("calDelta:{} to {}, lowDate:{} finish: size is {}", indStart, indEnd, strLowDate, size);
     }
 }
