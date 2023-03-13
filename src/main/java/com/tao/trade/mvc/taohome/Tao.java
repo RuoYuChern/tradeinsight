@@ -4,6 +4,7 @@ import com.tao.trade.domain.TaoData;
 import com.tao.trade.facade.CnDownTopDto;
 import com.tao.trade.facade.CnStockDailyDto;
 import com.tao.trade.facade.DashBoardDto;
+import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -70,8 +72,8 @@ public class Tao {
     }
 
     @GetMapping({"/recommend"})
-    public String recommend(Model model){
-        CnDownTopDto topDto = taoData.getupDownTop();
+    public String recommend(@RequestParam(name="tradeDate", required = false) String tradeDate, Model model){
+        CnDownTopDto topDto = taoData.getupDownTop(tradeDate);
         model.addAttribute("topDownDto", topDto);
         return String.format("%s/recommend", prefix);
     }
@@ -123,5 +125,10 @@ public class Tao {
             }
         }
         return String.format("%s/view-vs.html", prefix);
+    }
+
+    @GetMapping("/talk")
+    public String talk(Model model){
+        return String.format("%s/talk.html", prefix);
     }
 }

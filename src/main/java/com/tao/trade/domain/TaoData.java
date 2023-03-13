@@ -7,9 +7,11 @@ import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.SinaClient;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnMarketDaily;
+import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.*;
 import com.tao.trade.ml.TimeSeries;
+import com.tao.trade.proccess.IndicatorCalc;
 import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
@@ -52,25 +54,67 @@ public class TaoData {
         cnDownTopDto = new AtomicReference<>();
     }
 
-    public CnDownTopDto getupDownTop(){
-        CnDownTopDto dto = cnDownTopDto.get();
-        if(dto == null){
+    public CnDownTopDto getupDownTop(String tradeDate){
+        CnDownTopDto dto = null;
+        if(!StringUtils.hasLength(tradeDate)) {
+            dto = cnDownTopDto.get();
+        }else{
+            Date date = DateHelper.strToDate("yyyyMMdd", tradeDate);
+            if(DateHelper.daysDiff(new Date(), date) <= 60) {
+                Callable<Object> callable = ()->marketDaily.get(String.format("TOP-%s", tradeDate), ()->getTopDown(date));
+                Object obj = Help.call(callable);
+                if(obj != null){
+                    dto = (CnDownTopDto)obj;
+                    dto.setDay(tradeDate);
+                }
+            }
+        }
+        if (dto == null) {
             dto = new CnDownTopDto();
             dto.setDownTopList(new ArrayList<>());
             dto.setUpTopList(new ArrayList<>());
-            dto.setDay(DateHelper.dateToStr("yyyyMMdd", new Date()));
+            if(StringUtils.hasLength(tradeDate)){
+                dto.setDay(tradeDate);
+            }else {
+                dto.setDay(DateHelper.dateToStr("yyyyMMdd", new Date()));
+            }
         }
         return dto;
     }
 
+    public List<CnStockDaily> getSymbolBetween(String name, Date low, Date end){
+        String tsCode = getTsCode(name);
+        if(!StringUtils.hasLength(tsCode)){
+            return null;
+        }
+        log.info("tsCode:{}", tsCode);
+        return dao.getSymbolDailyBetween(tsCode, low, end);
+    }
+
+    public List<String> getHoliday(String start,String end){
+        Callable<List<TradeDateVo>> callable = ()->tuShareClient.trade_cal(start, end);
+        List<TradeDateVo> voList = Help.tryCall(callable);
+        List<String> holidays = new LinkedList<>();
+        for(TradeDateVo vo:voList){
+            if(vo.getIsOpen() == 0){
+                holidays.add(vo.getDate());
+            }
+        }
+        return holidays;
+    }
+
     public List<CnStockDailyDto> getSymbol(String tsCode){
         int limit = 150;
-        List<CnStockDailyStat> dailyStats = dao.getSymbolStat(tsCode, limit);
+        List<CnStockDailyStat> dailyStatList = dao.getSymbolStat(tsCode, limit);
         List<CnStockDailyDto> dailyDtoList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(dailyStats)) {
-            int startOffset = ((dailyStats.size() > limit) ? (dailyStats.size() - limit) : 0);
-            for(; startOffset < dailyStats.size(); startOffset++){
-                CnStockDailyDto dto = TaoConvert.CONVERT.fromDailyStat(dailyStats.get(startOffset));
+        if(!CollectionUtils.isEmpty(dailyStatList)) {
+            int startOffset = ((dailyStatList.size() > limit) ? (dailyStatList.size() - limit) : 0);
+            for(CnStockDailyStat ds:dailyStatList){
+                if(startOffset > 0){
+                    startOffset --;
+                    continue;
+                }
+                CnStockDailyDto dto = TaoConvert.CONVERT.fromDailyStat(ds);
                 dailyDtoList.add(dto);
             }
         }
@@ -87,7 +131,7 @@ public class TaoData {
         return null;
     }
 
-    public List<CnStockDailyDto> getByName(String name){
+    public String getTsCode(String name){
         if(nameTsCode == null){
             log.info("nameTsCode is null");
             return null;
@@ -95,6 +139,14 @@ public class TaoData {
         String tsCode = nameTsCode.get(name);
         if(!StringUtils.hasLength(tsCode)){
             log.info("Can not find ts code for:{}", Base64.getEncoder().encodeToString(name.getBytes()));
+            return null;
+        }
+        return tsCode;
+    }
+
+    public List<CnStockDailyDto> getByName(String name){
+        String tsCode = getTsCode(name);
+        if(!StringUtils.hasLength(tsCode)){
             return null;
         }
         log.info("tsCode:{}", tsCode);
@@ -220,6 +272,11 @@ public class TaoData {
         }
 
         return boardDto;
+    }
+
+    private CnDownTopDto getTopDown(Date date){
+        IndicatorCalc indicatorCalc = new IndicatorCalc(dao, tuShareClient, this);
+        return indicatorCalc.getDayDownUpTop(date);
     }
 
     private List<DailyDto> loadDailyIndex(String symbol){

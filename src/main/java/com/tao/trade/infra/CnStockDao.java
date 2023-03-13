@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -174,7 +175,7 @@ public class CnStockDao {
 
     public List<CnStockDaily> getDailyBetween(Date startDate, Date endDate){
         CnStockDailyExample example = new CnStockDailyExample();
-        example.createCriteria().andTradeDateBetween(startDate, endDate);
+        example.createCriteria().andTradeDateGreaterThanOrEqualTo(startDate).andTradeDateLessThan(endDate);
         example.setOrderByClause("trade_date ASC");
         return dailyMapper.selectByExample(example);
     }
@@ -197,6 +198,15 @@ public class CnStockDao {
         example.setOrderByClause("trade_date asc");
         List<CnStockDailyStat> statList = dailyStatMapper.selectByExample(example);
         return statList;
+    }
+
+    public List<CnStockDaily> getSymbolStat2(String tsCode, int limit){
+        Date lowDate = DateHelper.beforeNDays(new Date(), limit);
+        CnStockDailyExample example = new CnStockDailyExample();
+        example.createCriteria().andSymbolEqualTo(tsCode).andTradeDateGreaterThanOrEqualTo(lowDate);
+        example.setOrderByClause("trade_date asc");
+        List<CnStockDaily> dailyList = dailyMapper.selectByExample(example);
+        return dailyList;
     }
 
     public Date getDeltaDate(String symbol){

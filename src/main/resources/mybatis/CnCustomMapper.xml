@@ -65,7 +65,9 @@
             insert into public.cn_stock_daily_stat (symbol, price, sma_price, ma_price, ema_price, wma_price, trade_date)
             values (#{item.symbol,jdbcType=VARCHAR}, #{item.price,jdbcType=NUMERIC},
             #{item.smaPrice,jdbcType=NUMERIC}, #{item.maPrice,jdbcType=NUMERIC}, #{item.emaPrice,jdbcType=NUMERIC},
-            #{item.wmaPrice,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(symbol, trade_date) DO NOTHING
+            #{item.wmaPrice,jdbcType=NUMERIC}, #{item.tradeDate,jdbcType=DATE}) ON CONFLICT(symbol, trade_date) DO UPDATE SET
+            price = #{item.price,jdbcType=NUMERIC},sma_price = #{item.smaPrice,jdbcType=NUMERIC},ma_price = #{item.maPrice,jdbcType=NUMERIC},
+            ema_price = #{item.emaPrice,jdbcType=NUMERIC},wma_price = #{item.wmaPrice,jdbcType=NUMERIC}
         </foreach>
     </insert>
     <insert id="insertOrUpdateDelta" parameterType="com.tao.trade.infra.db.model.DataDeltaDate">

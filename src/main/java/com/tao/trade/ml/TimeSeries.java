@@ -36,6 +36,19 @@ public class TimeSeries {
         return BigDecimal.valueOf(sum).divide(BigDecimal.valueOf(count), 2, RoundingMode.DOWN);
     }
 
+    public BigDecimal MA(List<BigDecimal> data){
+        double sum = 0;
+        for(BigDecimal d:data){
+            sum = sum + d.doubleValue();
+        }
+        if(data.isEmpty()){
+            return BigDecimal.ZERO;
+        }else{
+            BigDecimal d = BigDecimal.valueOf(sum).divide(BigDecimal.valueOf(data.size()), 2, RoundingMode.DOWN);
+            return d;
+        }
+    }
+
     public static <T> BigDecimal MA(int period, int end, List<T> data, Function<T,BigDecimal> function){
         return SMA(period, end, data, function);
     }

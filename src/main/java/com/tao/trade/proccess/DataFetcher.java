@@ -7,6 +7,7 @@ import com.tao.trade.infra.db.model.CnMarketDaily;
 import com.tao.trade.infra.vo.*;
 import com.tao.trade.ml.TimeSeries;
 import com.tao.trade.utils.DateHelper;
+import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 @Slf4j
 public class DataFetcher {
@@ -70,7 +72,8 @@ public class DataFetcher {
 
             String tsCode = sb.toString();
             sb = new StringBuilder();
-            List<StockDailyVo> dailyVos = tuShareClient.daily(tsCode, startDate, endDate);
+            Callable<List<StockDailyVo>> callable = ()->tuShareClient.daily(tsCode, startDate, endDate);
+            List<StockDailyVo> dailyVos = Help.tryCall(callable);
             if(!CollectionUtils.isEmpty(dailyVos)){
                 /**补充行业**/
                 for(StockDailyVo dv:dailyVos){

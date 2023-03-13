@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{head :: tao-head}"></head>
+<body class="d-flex flex-column h-100">
+<div th:replace="~{tao_header :: tao-head}"></div>
+
+<div class="chat-container">
+  <div class="messages-container" id="chat-window"></div>
+  <div class="input-container">
+    <input id="input-box" type="text" placeholder="Type your message here"/>
+    <button id="send-button">发送</button>
+  </div>
+</div>‘
+
+<div th:replace="~{tao_footer :: tao-footer}"></div>
+<script th:src="@{/static/js/jquery.slim.min.js}"></script>
+<script th:src="@{/static/js/bootstrap.bundle.min.js}"></script>
+<script type="text/javascript">
+  function isEmpty(s){
+      return ((s == undefined) || (s == null) || (s == ''));
+  }
+  const chatWindow = document.getElementById("chat-window");
+  const chatBox = document.getElementById("input-box");
+  const sendButton = document.getElementById("send-button");
+  sendButton.addEventListener("click",()=>{
+    const message = chatBox.value;
+    if(isEmpty(message)){
+      return;
+    }
+    chatWindow.innerHTML += `<p>你：${message}</p>`;
+    chatBox.value = "";
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/api/ai/talk?world=" + message, true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = () => {
+      if ((xhr.readyState === XMLHttpRequest.DONE) && (xhr.status === 200)) {
+        const response = JSON.parse(xhr.responseText);
+        if(response.status === 200){
+          chatWindow.innerHTML += `<p>AI: ${response.data}</p>`;
+        }else{
+          chatWindow.innerHTML += `<p>AI: ${response.msg}</p>`;
+        }
+      }
+    };
+    xhr.send();
+  });
+
+</script>

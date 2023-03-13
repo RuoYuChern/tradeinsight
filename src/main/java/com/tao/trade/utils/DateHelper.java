@@ -2,6 +2,7 @@ package com.tao.trade.utils;
 
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.vo.TradeDateVo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,6 +11,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 public class DateHelper {
     private static String TU_DATE_FMT = "yyyyMMdd";
     public static boolean dateEqual(Date first, Date second){
@@ -52,14 +54,20 @@ public class DateHelper {
         String startDate = DateHelper.dateToStr(TU_DATE_FMT, start);
         List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TU_DATE_FMT, now));
         /**逆序**/
-        for(int i = list.size() - 1; i >= 0; i--){
-            TradeDateVo vo = list.get(i);
+        int offset = 0;
+        Date last = null;
+        for(TradeDateVo vo:list){
             if(vo.getIsOpen() == 0){
                 continue;
             }
-            return DateHelper.strToDate("yyyyMMdd", vo.getDate());
+            offset++;
+            last = DateHelper.strToDate("yyyyMMdd", vo.getDate());
+            if(offset >= 200){
+                break;
+            }
         }
-        return null;
+        log.info("offset:{}", offset);
+        return last;
     }
 
     public static Date afterNDays(Date now, int days){
@@ -70,13 +78,22 @@ public class DateHelper {
         return DateUtils.addDays(now, -days);
     }
 
+    public static int daysDiff(Date now, Date before){
+        long diff = now.getTime() - before.getTime();
+        return (int)(diff/(1000*60*60*24));
+    }
+
     public static boolean isHourAfter(int h){
         return (hours(new Date()) > h);
     }
 
+    public static boolean isHourBefore(int h){
+        return (hours(new Date()) < h);
+    }
+
     public static Date getDataDate(){
         Date today = new Date();
-        if(!isHourAfter(16)){
+        if(isHourBefore(17)){
             /**还没收盘，今天的数据放到增量同步**/
             today = DateHelper.beforeNDays(today, 1);
         }

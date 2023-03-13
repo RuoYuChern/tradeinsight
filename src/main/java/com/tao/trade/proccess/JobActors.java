@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -72,27 +69,24 @@ public class JobActors {
 
     private void schedule(){
         try{
-            if(!DateHelper.isHourAfter(16)){
+            log.info("schedule start");
+            lock.lock();
+            if(DateHelper.isHourBefore(17)){
                 isDeltaDone = false;
                 return;
             }
-            if(isDeltaDone){
-                return;
-            }
-            log.info("schedule start");
-            Date now = new Date();
-            lock.lock();
             if(!stockDao.hasLocked(LOCK_HISTORY)){
                 log.info("Does not have initialized");
                 return;
             }
+            Date now = new Date();
             Date lastDeltaDate = stockDao.getDeltaDate(DATA_DATE);
             if((lastDeltaDate == null) || DateHelper.dateEqual(lastDeltaDate, now)){
                 String str = "";
                 if(lastDeltaDate != null){
                     str = DateHelper.dateToStr("yyyyMMdd", lastDeltaDate);
                     isDeltaDone = true;
-                    log.info("set : isDeltaDone{}", isDeltaDone);
+                    log.info("set : isDeltaDone = {}", isDeltaDone);
                 }
                 log.info("lastDeltaDate is null or eq today:{}",str);
                 return;
@@ -148,7 +142,8 @@ public class JobActors {
                 return;
             }
             log.info("start");
-            List<StockBasicVo> basicVoList = tuShareClient.stock_basic("L");
+            Callable<List<StockBasicVo>> callable = ()->tuShareClient.stock_basic("L");
+            List<StockBasicVo> basicVoList = Help.tryCall(callable);
             stockBaseData.updateBasic(basicVoList);
             /**插入数据**/
             stockDao.batchInsertStockBasic(basicVoList);

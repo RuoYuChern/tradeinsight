@@ -24,7 +24,7 @@ public class IndicatorCalc{
     private static String TU_DATE_FMT = "yyyyMMdd";
     private final static int WINDOW_SIZE = 10;
     private final static int MV_SIZE = 200;
-    private final static int MV_DATE_SIZE = 250;
+    private final static int MV_DATE_SIZE = 360;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
     private final TaoData stockBaseData;
@@ -92,29 +92,7 @@ public class IndicatorCalc{
         Date second = DateHelper.strToDate(TU_DATE_FMT, indEnd);
         List<CnStockDailyStat> statList = new LinkedList<>();
         for(StockBasicVo vo: basicVoList){
-            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getTsCode(), first, second);
-            if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
-                log.info("Get symbol={},first={},second={},size={}", vo.getSymbol(), first, second, dailyList.size());
-                continue;
-            }
-            for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
-                CnStockDailyStat dailyStat = new CnStockDailyStat();
-                CnStockDaily stockDaily = dailyList.get(pos);
-
-                dailyStat.setSymbol(stockDaily.getSymbol());
-                dailyStat.setPrice(stockDaily.getClosePrice());
-                dailyStat.setTradeDate(stockDaily.getTradeDate());
-
-                if(pos >= MV_SIZE) {
-                    dailyStat.setMaPrice(TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                }else{
-                    dailyStat.setMaPrice(BigDecimal.ZERO);
-                }
-                dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setSmaPrice(TimeSeries.SMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setWmaPrice(TimeSeries.WMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                statList.add(dailyStat);
-            }
+            calcDaily(vo.getTsCode(), first, second, statList);
             /**save data**/
             if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
@@ -142,43 +120,73 @@ public class IndicatorCalc{
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);
         List<CnStockDailyStat> statList = new LinkedList<>();
         for (StockBasicVo vo: basicVoList){
-            List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(vo.getTsCode(), lowDate, endDate);
-            if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
-                continue;
-            }
-
-            for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
-                /**比较时间**/
-                CnStockDaily stockDaily = dailyList.get(pos);
-                if(stockDaily.getTradeDate().before(startDate)){
-                    break;
-                }
-                CnStockDailyStat dailyStat = new CnStockDailyStat();
-                dailyStat.setSymbol(stockDaily.getSymbol());
-                dailyStat.setPrice(stockDaily.getClosePrice());
-                dailyStat.setTradeDate(stockDaily.getTradeDate());
-                if(pos >= MV_SIZE) {
-                    dailyStat.setMaPrice(TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                }else{
-                    dailyStat.setMaPrice(BigDecimal.ZERO);
-                }
-                dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setSmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                dailyStat.setWmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
-                statList.add(dailyStat);
-            }
+            calcDaily(vo.getTsCode(), lowDate, endDate, statList);
             /**save data**/
             if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
-                statList.clear();
                 size += statList.size();
+                statList.clear();
             }
         }
         if(statList.size() > 0) {
             stockDao.batchInsertDailyStat(statList);
-            statList.clear();
             size += statList.size();
+            statList.clear();
         }
         log.info("calDelta:{} to {}, lowDate:{} finish: size is {}", indStart, indEnd, strLowDate, size);
+    }
+
+    private void calcDaily(String tsCode, Date lowDate, Date endDate, List<CnStockDailyStat> statList){
+        List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(tsCode, lowDate, endDate);
+        if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
+            log.info("Get symbol={},first={},second={},size={}", tsCode, lowDate, endDate, dailyList.size());
+            return;
+        }
+        BigDecimal Ma = BigDecimal.ZERO;
+        for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
+            CnStockDailyStat dailyStat = new CnStockDailyStat();
+            CnStockDaily stockDaily = dailyList.get(pos);
+
+            dailyStat.setSymbol(stockDaily.getSymbol());
+            dailyStat.setPrice(stockDaily.getClosePrice());
+            dailyStat.setTradeDate(stockDaily.getTradeDate());
+
+            if(pos >= MV_SIZE) {
+                Ma = TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice);
+                dailyStat.setMaPrice(Ma);
+            }else{
+                dailyStat.setMaPrice(Ma);
+            }
+            dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            dailyStat.setSmaPrice(TimeSeries.SMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            dailyStat.setWmaPrice(TimeSeries.WMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            statList.add(dailyStat);
+        }
+    }
+
+    public static List<CnStockDailyStat> calc(List<CnStockDaily> dailyList){
+        List<CnStockDailyStat> dailyStatList = new LinkedList<>();
+        if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
+            return dailyStatList;
+        }
+
+        for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
+            CnStockDaily stockDaily = dailyList.get(pos);
+            CnStockDailyStat dailyStat = new CnStockDailyStat();
+            dailyStat.setSymbol(stockDaily.getSymbol());
+            dailyStat.setPrice(stockDaily.getClosePrice());
+            dailyStat.setTradeDate(stockDaily.getTradeDate());
+            if(pos >= (MV_SIZE - 1)) {
+                dailyStat.setMaPrice(TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            }else{
+                dailyStat.setMaPrice(BigDecimal.ZERO);
+            }
+
+            dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            dailyStat.setSmaPrice(TimeSeries.SMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            dailyStat.setWmaPrice(TimeSeries.WMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
+            dailyStatList.add(0, dailyStat);
+        }
+        return dailyStatList;
     }
 }
