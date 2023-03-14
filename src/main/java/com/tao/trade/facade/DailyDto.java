@@ -13,6 +13,7 @@ public class DailyDto {
     private BigDecimal sma;
     private BigDecimal ema;
     private BigDecimal wma;
+    private BigDecimal macd;
     private BigDecimal volume;
     private BigDecimal amount;
 }

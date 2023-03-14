@@ -10,6 +10,7 @@ import com.tao.trade.infra.db.model.CnMarketDaily;
 import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.*;
+import com.tao.trade.ml.MACD;
 import com.tao.trade.ml.TimeSeries;
 import com.tao.trade.proccess.IndicatorCalc;
 import com.tao.trade.utils.DateHelper;
@@ -118,6 +119,8 @@ public class TaoData {
                 dailyDtoList.add(dto);
             }
         }
+        MACD macd = new MACD(12, 26, 9);
+        macd.calculate(dailyDtoList, CnStockDailyDto::getPrice, CnStockDailyDto::setMacd);
         return dailyDtoList;
     }
 
@@ -299,6 +302,8 @@ public class TaoData {
             }
             log.info("loadDailyIndex symbol:{},size:{}", symbol, indexList.size());
             Iterator<DailyDto> it = indexList.iterator();
+            MACD macd = new MACD(12,26, 9);
+            macd.calculate(indexList, DailyDto::getClose, DailyDto::setMacd);
             while (it.hasNext()){
                 DailyDto dto = it.next();
                 if(dto.getSma() == null){

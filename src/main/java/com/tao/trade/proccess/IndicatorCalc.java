@@ -92,7 +92,7 @@ public class IndicatorCalc{
         Date second = DateHelper.strToDate(TU_DATE_FMT, indEnd);
         List<CnStockDailyStat> statList = new LinkedList<>();
         for(StockBasicVo vo: basicVoList){
-            calcDaily(vo.getTsCode(), first, second, statList);
+            calcDaily(null, vo.getTsCode(), first, second, statList);
             /**save data**/
             if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
@@ -120,7 +120,7 @@ public class IndicatorCalc{
         lowDate = DateHelper.strToDate(TU_DATE_FMT, strLowDate);
         List<CnStockDailyStat> statList = new LinkedList<>();
         for (StockBasicVo vo: basicVoList){
-            calcDaily(vo.getTsCode(), lowDate, endDate, statList);
+            calcDaily(startDate, vo.getTsCode(), lowDate, endDate, statList);
             /**save data**/
             if(statList.size() >= 50) {
                 stockDao.batchInsertDailyStat(statList);
@@ -136,26 +136,26 @@ public class IndicatorCalc{
         log.info("calDelta:{} to {}, lowDate:{} finish: size is {}", indStart, indEnd, strLowDate, size);
     }
 
-    private void calcDaily(String tsCode, Date lowDate, Date endDate, List<CnStockDailyStat> statList){
+    private void calcDaily(Date startDate, String tsCode, Date lowDate, Date endDate, List<CnStockDailyStat> statList){
         List<CnStockDaily> dailyList = stockDao.getSymbolDailyBetween(tsCode, lowDate, endDate);
         if(CollectionUtils.isEmpty(dailyList) || (dailyList.size() < WINDOW_SIZE)){
             log.info("Get symbol={},first={},second={},size={}", tsCode, lowDate, endDate, dailyList.size());
             return;
         }
-        BigDecimal Ma = BigDecimal.ZERO;
         for(int pos = dailyList.size() - 1; pos >= (WINDOW_SIZE - 1); pos--){
-            CnStockDailyStat dailyStat = new CnStockDailyStat();
             CnStockDaily stockDaily = dailyList.get(pos);
-
+            if((startDate != null) && (stockDaily.getTradeDate().before(startDate))){
+                break;
+            }
+            CnStockDailyStat dailyStat = new CnStockDailyStat();
             dailyStat.setSymbol(stockDaily.getSymbol());
             dailyStat.setPrice(stockDaily.getClosePrice());
             dailyStat.setTradeDate(stockDaily.getTradeDate());
 
-            if(pos >= MV_SIZE) {
-                Ma = TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice);
-                dailyStat.setMaPrice(Ma);
+            if(pos >= (MV_SIZE - 1)) {
+                dailyStat.setMaPrice(TimeSeries.MA(MV_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
             }else{
-                dailyStat.setMaPrice(Ma);
+                dailyStat.setMaPrice(BigDecimal.ZERO);
             }
             dailyStat.setEmaPrice(TimeSeries.EMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));
             dailyStat.setSmaPrice(TimeSeries.SMA(WINDOW_SIZE, pos, dailyList, CnStockDaily::getClosePrice));

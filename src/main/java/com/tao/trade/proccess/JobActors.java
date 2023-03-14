@@ -147,7 +147,7 @@ public class JobActors {
             stockBaseData.updateBasic(basicVoList);
             /**插入数据**/
             stockDao.batchInsertStockBasic(basicVoList);
-            Date today = new Date();
+            Date today = DateHelper.getCureDataDate();
             Date endDate = DateHelper.getBiggerDate(tuShareClient, DateHelper.beforeNDays(today, 30), today);
             String strEnd  = DateHelper.dateToStr(TU_DATE_FMT, endDate);
             /**取数据 2020，2021，2022**/

@@ -78,6 +78,15 @@ public class DateHelper {
         return DateUtils.addDays(now, -days);
     }
 
+    public static Date getCureDataDate(){
+        Date date = new Date();
+        if(isHourAfter(17)){
+            return date;
+        }else{
+            return beforeNDays(date, 1);
+        }
+    }
+
     public static int daysDiff(Date now, Date before){
         long diff = now.getTime() - before.getTime();
         return (int)(diff/(1000*60*60*24));

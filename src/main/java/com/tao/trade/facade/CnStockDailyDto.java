@@ -12,5 +12,6 @@ public class CnStockDailyDto {
     private BigDecimal maPrice;
     private BigDecimal emaPrice;
     private BigDecimal wmaPrice;
+    private BigDecimal macd;
     private String tradeDate;
 }

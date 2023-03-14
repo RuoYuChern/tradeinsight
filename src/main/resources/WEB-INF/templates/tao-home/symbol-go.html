@@ -10,10 +10,10 @@
         <div class="row row-deck row-cards">
             <div class="col-sm-12 col-lg-12">
                 <div class="card">
-                    <div class="card-header" th:text="#{trend}">趋势图</div>
                     <div class="card-body">
                         <h5 class="card-title" th:text="(${stock} == null)? #{noData} : ${stock}"></h5>
                         <div id="chart-trend-bg" class="chart-sm"></div>
+                        <div id="chart-macd-bg" class="chart-sm"></div>
                     </div>
                 </div>
             </div>
@@ -27,13 +27,21 @@
 <script th:src="@{/static/js/apexcharts.min.js}"></script>
 <script th:inline="javascript" type="text/javascript">
     var trend = {
-    series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
-    {name: "WMA-10",data: []}],
-    chart: {height: 600,type: 'line',zoom: {enabled: false}},
-    dataLabels: {enabled: false},
-    stroke: {curve: 'smooth', width:2},
-    grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
-    xaxis: {categories: [],}
+        series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
+                {name: "WMA-10",data: []}],
+        chart: {height: 450,type: 'line',zoom: {enabled: false}},
+        dataLabels: {enabled: false},
+        stroke: {curve: 'smooth', width:2},
+        grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+        xaxis: {categories: [],}
+    };
+    var macd = {
+        series: [{name: "macd-signal",data: []}],
+        chart: {height: 150,type: 'line',zoom: {enabled: false}},
+        dataLabels: {enabled: false},
+        stroke: {curve: 'smooth', width:2},
+        grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+        xaxis: {categories: [],}
     };
     /**trend**/
     /*[# th:each="mdo : ${dailyList}"]*/
@@ -43,9 +51,13 @@
     trend.series[3].data.push(/*[[${mdo.emaPrice}]]*/);
     trend.series[4].data.push(/*[[${mdo.wmaPrice}]]*/);
     trend.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
+    macd.series[0].data.push(/*[[${mdo.macd}]]*/);
+    macd.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
     /*[/]*/
     var chartTrend = new ApexCharts(document.querySelector("#chart-trend-bg"), trend);
     chartTrend.render();
+    var chartMacd = new ApexCharts(document.querySelector("#chart-macd-bg"), macd);
+    chartMacd.render();
 </script>
 </body>
 </html>

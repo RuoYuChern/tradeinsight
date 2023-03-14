@@ -4,7 +4,6 @@ import com.tao.trade.domain.TaoData;
 import com.tao.trade.facade.CnDownTopDto;
 import com.tao.trade.facade.CnStockDailyDto;
 import com.tao.trade.facade.DashBoardDto;
-import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Date;
 import java.util.List;
 
 @Controller

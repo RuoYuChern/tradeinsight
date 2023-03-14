@@ -20,20 +20,20 @@
     </div>
     <div class="col-sm-5 col-lg-5">
       <div class="card">
-        <div class="card-header" th:text="#{trend}"></div>
         <div class="card-body">
           <h5 class="card-title" th:text="(${firstList} == null)? #{noData} : ${first}"></h5>
           <div id="chart-first-bg"></div>
+          <div id="chart-first-macd-bg"></div>
         </div>
       </div>
     </div>
 
-    <div class="col-sm-5 col-lg-5">
+    <div class="col-sm-6 col-lg-6">
       <div class="card">
-        <div class="card-header" th:text="#{trend}"></div>
         <div class="card-body">
           <h5 class="card-title" th:text="(${secondList} == null)? #{noData} : ${second}"></h5>
           <div id="chart-second-bg"></div>
+          <div id="chart-second-macd-bg"></div>
         </div>
       </div>
     </div>
@@ -51,7 +51,15 @@
         var first = {
             series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
                 {name: "WMA-10",data: []}],
-            chart: {height: 600,type: 'line',zoom: {enabled: false}},
+            chart: {height: 450,type: 'line',zoom: {enabled: false}},
+            dataLabels: {enabled: false},
+            stroke: {curve: 'smooth', width:2},
+            grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+            xaxis: {categories: [],}
+        };
+        var firstMacd = {
+            series: [{name: "macd-signal",data: []}],
+            chart: {height: 150,type: 'line',zoom: {enabled: false}},
             dataLabels: {enabled: false},
             stroke: {curve: 'smooth', width:2},
             grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
@@ -64,16 +72,27 @@
         first.series[2].data.push(/*[[${mdo.maPrice}]]*/);
         first.series[3].data.push(/*[[${mdo.emaPrice}]]*/);
         first.series[4].data.push(/*[[${mdo.wmaPrice}]]*/);
+        firstMacd.series[0].data.push(/*[[${mdo.macd}]]*/);
         first.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
+        firstMacd.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
         /*[/]*/
         var chartFirst = new ApexCharts(document.querySelector("#chart-first-bg"), first);
         chartFirst.render();
+        var chartFirstMacd = new ApexCharts(document.querySelector("#chart-first-macd-bg"), firstMacd);
+        chartFirstMacd.render();
     [/]
     [# th:if="(${secondList} != null)"]
         var second = {
-            series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
-                {name: "WMA-10",data: []}],
-            chart: {height: 600,type: 'line',zoom: {enabled: false}},
+            series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},{name: "WMA-10",data: []}],
+            chart: {height: 450,type: 'line',zoom: {enabled: false}},
+            dataLabels: {enabled: false},
+            stroke: {curve: 'smooth', width:2},
+            grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
+            xaxis: {categories: [],}
+        };
+        var secondMacd = {
+            series: [{name: "macd-signal",data: []}],
+            chart: {height: 150,type: 'line',zoom: {enabled: false}},
             dataLabels: {enabled: false},
             stroke: {curve: 'smooth', width:2},
             grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
@@ -86,10 +105,14 @@
         second.series[2].data.push(/*[[${mdo.maPrice}]]*/);
         second.series[3].data.push(/*[[${mdo.emaPrice}]]*/);
         second.series[4].data.push(/*[[${mdo.wmaPrice}]]*/);
+        secondMacd.series[0].data.push(/*[[${mdo.macd}]]*/);
         second.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
+        secondMacd.xaxis.categories.push(/*[[${mdo.tradeDate}]]*/);
         /*[/]*/
         var chartSecond = new ApexCharts(document.querySelector("#chart-second-bg"), second);
         chartSecond.render();
+        var chartSecondMacd = new ApexCharts(document.querySelector("#chart-second-macd-bg"), secondMacd);
+        chartSecondMacd.render();
     [/]
 </script>
 </body>

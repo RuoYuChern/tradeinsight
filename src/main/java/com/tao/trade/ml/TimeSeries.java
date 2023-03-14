@@ -1,7 +1,13 @@
 package com.tao.trade.ml;
 
+import com.tao.trade.facade.IndicatorDto;
+import com.tao.trade.infra.db.model.CnStockDaily;
+import com.tao.trade.utils.DateHelper;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -98,5 +104,122 @@ public class TimeSeries {
             wma = wma + cure;
         }
         return new BigDecimal((wma/sum)).setScale(2, RoundingMode.HALF_DOWN);
+    }
+
+    public static <T> List<IndicatorDto> SMA(int period, List<T> dailyList, Function<T,BigDecimal> valueFunc,  Function<T, Date> dateFun){
+        List<IndicatorDto> dtoList = new ArrayList<>();
+        double sum = 0;
+        int offset = 0;
+        T pre = null;
+        for(T d:dailyList){
+            sum += valueFunc.apply(d).doubleValue();
+            if(offset >= (period -1)){
+                IndicatorDto ind = new IndicatorDto();
+                ind.setValue(new BigDecimal(sum/period).setScale(2, RoundingMode.HALF_DOWN));
+                ind.setDay(DateHelper.dateToStr("yyyyMMdd", dateFun.apply(d)));
+                ind.setPrice(valueFunc.apply(d));
+                dtoList.add(ind);
+            }
+            if(pre != null){
+                sum -= valueFunc.apply(pre).doubleValue();
+            }
+            pre = d;
+        }
+        return dtoList;
+    }
+
+    public static List<IndicatorDto> ADX_CALC(int period, int delta, List<CnStockDaily> dailyList){
+        List<IndicatorDto> dtoList = new ArrayList<>();
+        int twoPeriod = 2 * period;
+        for(int i = (twoPeriod + delta); i < dailyList.size(); i++){
+            BigDecimal adx = ADX(period, delta, dailyList, i);
+            IndicatorDto ind = new IndicatorDto();
+            ind.setPrice(dailyList.get(i).getClosePrice());
+            ind.setValue(adx);
+            ind.setDay(DateHelper.dateToStr("yyyyMMdd", dailyList.get(i).getTradeDate()));
+
+            dtoList.add(ind);
+        }
+        return dtoList;
+    }
+
+    public static BigDecimal ADX(int period, int delta, List<CnStockDaily> dailyList, int end){
+        int twoPeriod = 2 * period;
+        if(end < (twoPeriod + delta)){
+            return BigDecimal.ZERO;
+        }
+        int len = twoPeriod + delta;
+        double []dmPlus = new double[len];
+        double []dmMinus = new double[len];
+        double []tr = new double[len];
+        double []diPlus = new double[len];
+        double []diMinus = new double[len];
+        double []dx = new double[len];
+        double []adx = new double[len];
+
+        /**initialize**/
+        dmPlus[0] = 0;
+        dmMinus[0] = 0;
+        tr[0] = 0;
+        diPlus[0] = 0;
+        diMinus[0] = 0;
+        int start = end - len + 1;
+        for(int i = start + 1; i <= end; i++){
+            CnStockDaily pre = dailyList.get(i - 1);
+            CnStockDaily cure = dailyList.get(i);
+            double upMove = cure.getHighPrice().subtract(pre.getHighPrice()).doubleValue();
+            double downMove = pre.getLowPrice().subtract(cure.getLowPrice()).doubleValue();
+            /**dmPlus**/
+            if((upMove > downMove) && (upMove > 0)){
+                dmPlus[i] = upMove;
+            }else{
+                dmPlus[i] = 0;
+            }
+            /**dmMinus**/
+            if((downMove > upMove) && (downMove > 0)){
+                dmMinus[i] = downMove;
+            }else {
+                dmMinus[i] = 0;
+            }
+            /**abs(h(i) - close(i-1))**/
+            double hC = cure.getHighPrice().subtract(pre.getClosePrice()).abs().doubleValue();
+            /**max(h(i) - l(i), abs(h(i) -close(i - 1)))***/
+            double HlHc = Math.max(cure.getHighPrice().subtract(cure.getLowPrice()).doubleValue(), hC);
+            /**abs(l(i) - close(i - 1))***/
+            double lc = cure.getLowPrice().subtract(pre.getClosePrice()).abs().doubleValue();
+            tr[i] = Math.max(lc, HlHc);
+        }
+        /*****/
+        double dmPlusSmooth = 0;
+        double dmMinusSmooth = 0;
+        double trSmooth = 0;
+        for(int i = 0; i < period; i++){
+            dmPlusSmooth += dmPlus[i];
+            dmMinusSmooth += dmMinus[i];
+            trSmooth += tr[i];
+            diPlus[i] = 0;
+            diMinus[i] = 0;
+        }
+        diPlus[period - 1] = dmPlusSmooth/period;
+        diMinus[period - 1] = dmMinusSmooth/period;
+        double atr = trSmooth/period;
+        for(int i = period; i < len; i++){
+            diPlus[i] = ((diPlus[i-1] * (period-1)) + dmPlus[i]) / period;
+            diMinus[i] = ((diMinus[i-1] * (period-1)) + dmMinus[i]) / period;
+            atr = ((atr * (period-1)) + tr[i]) / period;
+            double plusDI = 100 * (diPlus[i] / atr);
+            double minusDI = 100 * (diMinus[i] / atr);
+            dx[i] = 100 * (Math.abs(plusDI - minusDI) / (plusDI + minusDI));
+            if (i >= twoPeriod-1) {
+                double dxSmooth = 0;
+                for (int j = i-period+1; j <= i; j++) {
+                    dxSmooth += dx[j];
+                }
+                adx[i] = dxSmooth / period;
+            }else{
+                adx[i] = 0;
+            }
+        }
+        return new BigDecimal(adx[len - 1]).setScale(2, RoundingMode.HALF_DOWN);
     }
 }
