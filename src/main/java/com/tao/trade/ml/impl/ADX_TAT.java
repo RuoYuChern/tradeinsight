@@ -65,28 +65,27 @@ public class ADX_TAT implements QFilter {
                 return result;
             }
         }
-
         /**连续小**/
-        isContinue = false;
-        for(int i = 0; i < MAX_TIMES; i++){
-            IndicatorDto ind = indList.get(cure - i);
-            if (ind.getValue().compareTo(sma) < 0) {
-                isContinue = true;
-                continue;
-            }
-            isContinue = false;
-            break;
-        }
-        if(isContinue){
-            if(isNewHigh){
-                result.setSignal(MarketSignal.SELL);
-                return result;
-            }
-            if(isNewLow){
-                result.setSignal(MarketSignal.BUY);
-                return result;
-            }
-        }
+//        isContinue = false;
+//        for(int i = 0; i < MAX_TIMES; i++){
+//            IndicatorDto ind = indList.get(cure - i);
+//            if (ind.getValue().compareTo(sma) < 0) {
+//                isContinue = true;
+//                continue;
+//            }
+//            isContinue = false;
+//            break;
+//        }
+//        if(isContinue){
+//            if(isNewHigh){
+//                result.setSignal(MarketSignal.SELL);
+//                return result;
+//            }
+//            if(isNewLow){
+//                result.setSignal(MarketSignal.BUY);
+//                return result;
+//            }
+//        }
         return QFilter.NO;
     }
 
