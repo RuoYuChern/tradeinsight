@@ -1,11 +1,10 @@
 package com.tao.trade.mvc.taohome;
 
 import com.tao.trade.domain.TaoData;
-import com.tao.trade.facade.CnDownTopDto;
-import com.tao.trade.facade.CnStockDailyDto;
-import com.tao.trade.facade.DashBoardDto;
+import com.tao.trade.facade.*;
 import com.tao.trade.utils.Help;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +13,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -65,7 +65,30 @@ public class Tao {
     }
 
     @GetMapping({"/rebound"})
-    public String rebound(Model model){
+    public String rebound(@RequestParam(name="tradeDate", required = false) String tradeDate,
+                          @RequestParam(name="pageNum", required = false) Integer pageNum,
+                          Model model){
+        if(pageNum == null){
+            pageNum = Integer.valueOf(1);
+        }
+        Pair<Integer, QuaintDailyFilterDto> listPair = taoData.getQuaintFilter(tradeDate, pageNum, 50);
+        QuaintDailyFilterDto dailyFilterDto = listPair.getRight();
+        model.addAttribute("queryDate", tradeDate);
+        model.addAttribute("tradeDate", dailyFilterDto.getTradeDate());
+        if(!CollectionUtils.isEmpty(dailyFilterDto.getQuaintList())) {
+            if (dailyFilterDto.getQuaintList().size() > 25) {
+                model.addAttribute("leftList", dailyFilterDto.getQuaintList().subList(0, 25));
+                model.addAttribute("rightList", dailyFilterDto.getQuaintList().subList(25, dailyFilterDto.getQuaintList().size()));
+            }else{
+                model.addAttribute("leftList", dailyFilterDto.getQuaintList());
+                model.addAttribute("rightList", new ArrayList<>(0));
+            }
+        }else {
+            model.addAttribute("leftList", new ArrayList<>(0));
+            model.addAttribute("rightList", new ArrayList<>(0));
+        }
+        model.addAttribute("totalPage", listPair.getLeft());
+        model.addAttribute("pageNum", pageNum);
         return String.format("%s/rebound", prefix);
     }
 

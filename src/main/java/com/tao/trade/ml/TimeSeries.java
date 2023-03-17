@@ -3,6 +3,7 @@ package com.tao.trade.ml;
 import com.tao.trade.facade.IndicatorDto;
 import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.utils.DateHelper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@Slf4j
 public class TimeSeries {
 
     public static <T> void fillValue(List<T> data, Function<T,BigDecimal> function, BiConsumer<T,BigDecimal> setter){
@@ -164,9 +166,11 @@ public class TimeSeries {
         diPlus[0] = 0;
         diMinus[0] = 0;
         int start = end - len + 1;
-        for(int i = start + 1; i <= end; i++){
-            CnStockDaily pre = dailyList.get(i - 1);
-            CnStockDaily cure = dailyList.get(i);
+
+        for(int i = 1; i < len; i++){
+            int pos = (start + i);
+            CnStockDaily pre = dailyList.get(pos - 1);
+            CnStockDaily cure = dailyList.get(pos);
             double upMove = cure.getHighPrice().subtract(pre.getHighPrice()).doubleValue();
             double downMove = pre.getLowPrice().subtract(cure.getLowPrice()).doubleValue();
             /**dmPlus**/
@@ -220,6 +224,11 @@ public class TimeSeries {
                 adx[i] = 0;
             }
         }
-        return new BigDecimal(adx[len - 1]).setScale(2, RoundingMode.HALF_DOWN);
+        try{
+            return new BigDecimal(adx[len - 1]).setScale(2, RoundingMode.HALF_DOWN);
+        }catch (Throwable t){
+            log.warn("len = {}, period={}, adx={}, twoPeriod={}", len, period, adx[len - 1], twoPeriod);
+            throw t;
+        }
     }
 }

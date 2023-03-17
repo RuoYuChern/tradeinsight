@@ -2,24 +2,84 @@
 
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{head :: tao-head}"></head>
-<body>
-<div th:replace="~{tao_header :: tao-head}"></div>
 <body class="d-flex flex-column h-100">
-
-<!-- Begin page content -->
-<main role="main" class="flex-shrink-0">
-    <div class="container">
-        <h1 class="mt-5">Sticky footer</h1>
-        <p class="lead">Pin a footer to the bottom of the viewport in desktop browsers with this custom HTML and CSS.</p>
-        <p>Use <a href="/docs/examples/sticky-footer-navbar/">the sticky footer with a fixed navbar</a> if need be, too.</p>
+<div th:replace="~{tao_header :: tao-head}"></div>
+<div class="container-fluid">
+    <div class="row d-flex justify-content-end">
+        <form class="form-inline " th:action="@{/rebound}" method="get">
+            <div class="form-group">
+                <input type="text" class="form-control mr-sm-2" id="tradeDate" name="tradeDate" placeholder="20230316" required autofocus>
+                <button id="submit" type="submit" class="btn btn-primary mr-sm-2" th:text="#{submit}"></button>
+            </div>
+        </form>
     </div>
-</main>
-
-<footer class="footer mt-auto py-3">
-    <div class="container">
-        <span class="text-muted">Place sticky footer content here.</span>
+    <nav aria-label="rebound-navigation">
+        <ul class="pagination justify-content-end">
+            <li th:class="${pageNum == 1}? 'page-item disabled' : 'page-item' ">
+                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1},tradeDate=${queryDate})}">上一页</a>
+                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1})}">上一页</a>
+            </li>
+            <th:block th:if="${totalPage > 0}">
+                <th:block th:each="page: ${#numbers.sequence(1, totalPage)}">
+                    <li th:if="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page},tradeDate=${queryDate})}" th:text="${page}"></a></li>
+                    <li th:unless="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page})}" th:text="${page}"></a></li>
+                </th:block>
+            </th:block>
+            <li th:class="${pageNum < totalPage}? 'page-item' : 'page-item disabled' ">
+                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1},tradeDate=${queryDate})}">上一页</a>
+                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1})}">下一页</a>
+            </li>
+        </ul>
+    </nav>
+    <div class="row row-deck row-cards">
+        <div class="col-sm-6 col-lg-6">
+            <div class="card">
+                <div class="card-header" th:text="${tradeDate != null}? ${tradeDate}"></div>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">股票</th>
+                        <th scope="col">行业</th>
+                        <th scope="col">策略信号</th>
+                        <th scope="col">查看</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="dto : ${leftList}">
+                        <th scope="row" th:text="${dto.stock}"></th>
+                        <td th:text="${dto.industry}"></td>
+                        <td th:text="${dto.strategyList}"></td>
+                        <td><a class="nav-link active" th:href="@{/symbol-go(tsCode=${dto.tsCode})}">Go</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-6">
+            <div class="card">
+                <div class="card-header" th:text="${tradeDate}"></div>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">股票</th>
+                        <th scope="col">行业</th>
+                        <th scope="col">策略信号</th>
+                        <th scope="col">查看</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="dto : ${rightList}">
+                        <th scope="row" th:text="${dto.stock}"></th>
+                        <td th:text="${dto.industry}"></td>
+                        <td th:text="${dto.strategyList}"></td>
+                        <td><a class="nav-link active" th:href="@{/symbol-go(tsCode=${dto.tsCode})}">Go</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-</footer>
+</div>
 <script th:src="@{/static/js/jquery.slim.min.js}"></script>
 <script th:src="@{/static/js/bootstrap.bundle.min.js}"></script>
 </body>

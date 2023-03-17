@@ -12,12 +12,16 @@
                 <pattern>${pattern}</pattern>
             </PatternLayout>
         </File>
-        <RollingFile name="rollingFile" fileName="${logPath}/${displayName}.log" filePattern="${logPath}/${displayName}_%d{yyyy-MM-dd}_%i.log">
+        <RollingRandomAccessFile name="rollingFile" fileName="${logPath}/${displayName}.log" filePattern="${logPath}/${displayName}_%d{yyyy-MM-dd}_%i.log">
             <PatternLayout>
                 <pattern>${pattern}</pattern>
             </PatternLayout>
-            <SizeBasedTriggeringPolicy size="100 MB" />
-        </RollingFile>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="100 MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingRandomAccessFile >
     </Appenders>
     <Loggers>
         <Root level="INFO">

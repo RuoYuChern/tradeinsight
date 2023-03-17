@@ -35,7 +35,7 @@ public class TaoData {
     private final static int WINDOW_SIZE = 10;
 
     @Autowired
-    private CnStockDao dao;
+    private CnStockDao taoDao;
     @Autowired
     private TuShareClient tuShareClient;
     @Autowired
@@ -44,6 +44,7 @@ public class TaoData {
     private volatile Map<String, StockBasicVo> basicVoMap;
     private volatile Map<String, String> nameTsCode;
     private AtomicReference<CnDownTopDto> cnDownTopDto;
+    private AtomicReference<QuaintDailyFilterDto> quaintDailyFilterDto;
     private Cache<String, Object> marketDaily;
     public TaoData(){
         basicVoList = new AtomicReference<>();
@@ -53,6 +54,61 @@ public class TaoData {
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
         cnDownTopDto = new AtomicReference<>();
+        quaintDailyFilterDto = new AtomicReference<>();
+    }
+
+
+    public void updateQuaintFilter(QuaintDailyFilterDto dto){
+        quaintDailyFilterDto.set(dto);
+    }
+
+    public Pair<Integer,QuaintDailyFilterDto> getQuaintFilter(String date, int pageNum, int pageSize){
+        List<QuaintFilterDto> list = null;
+        if(!StringUtils.hasLength(date)){
+            if(quaintDailyFilterDto.get() != null) {
+                list = quaintDailyFilterDto.get().getQuaintList();
+                date = quaintDailyFilterDto.get().getTradeDate();
+            }
+        }else{
+            if(quaintDailyFilterDto.get() != null){
+                if(quaintDailyFilterDto.get().getTradeDate().equals(date)){
+                    list = quaintDailyFilterDto.get().getQuaintList();
+                    date = quaintDailyFilterDto.get().getTradeDate();
+                }
+            }
+            if(CollectionUtils.isEmpty(list)) {
+                Date tradeDate = DateHelper.strToDate(TaoConstants.TU_DATE_FMT, date);
+                Date dataDate = taoDao.getDeltaDate(TaoConstants.DATA_DATE);
+                if ((dataDate != null) &&(tradeDate.before(dataDate))
+                        && DateHelper.daysDiff(new Date(), tradeDate) <= 7) {
+                    Callable<Object> callable = () -> marketDaily.get(String.format("Quaint-%s", tradeDate), () -> getQuaintFilter(tradeDate));
+                    Object obj = Help.call(callable);
+                    if (obj != null) {
+                        list = (List<QuaintFilterDto>) obj;
+                    }
+                }
+            }
+        }
+        QuaintDailyFilterDto quaintDailyDto = new QuaintDailyFilterDto();
+        Integer total = 0;
+        List<QuaintFilterDto> qList = new LinkedList<>();
+        if(!CollectionUtils.isEmpty(list)){
+            total = (list.size()/pageSize) + (((list.size() % pageSize) == 0)? 0:1);
+            int offset = (pageNum - 1) * pageSize;
+            for(QuaintFilterDto dto: list){
+                if(offset > 0){
+                    offset -= 1;
+                    continue;
+                }
+                if(qList.size() >= pageSize){
+                    break;
+                }
+                qList.add(dto);
+            }
+        }
+        quaintDailyDto.setQuaintList(qList);
+        quaintDailyDto.setTradeDate(date);
+        return Pair.of(total, quaintDailyDto);
     }
 
     public CnDownTopDto getupDownTop(String tradeDate){
@@ -60,24 +116,32 @@ public class TaoData {
         if(!StringUtils.hasLength(tradeDate)) {
             dto = cnDownTopDto.get();
         }else{
-            Date date = DateHelper.strToDate("yyyyMMdd", tradeDate);
-            if(DateHelper.daysDiff(new Date(), date) <= 60) {
-                Callable<Object> callable = ()->marketDaily.get(String.format("TOP-%s", tradeDate), ()->getTopDown(date));
-                Object obj = Help.call(callable);
-                if(obj != null){
-                    dto = (CnDownTopDto)obj;
-                    dto.setDay(tradeDate);
+            if(cnDownTopDto.get() != null){
+                if(cnDownTopDto.get().getDay().equals(tradeDate)){
+                    dto = cnDownTopDto.get();
+                }
+            }
+            if(dto == null) {
+                Date date = DateHelper.strToDate(TaoConstants.TU_DATE_FMT, tradeDate);
+                Date dataDate = taoDao.getDeltaDate(TaoConstants.DATA_DATE);
+                if ((dataDate != null) && (date.before(dataDate)) && (DateHelper.daysDiff(dataDate, date) <= 20)) {
+                    Callable<Object> callable = () -> marketDaily.get(String.format("TOP-%s", tradeDate), () -> getTopDown(date));
+                    Object obj = Help.call(callable);
+                    if (obj != null) {
+                        dto = (CnDownTopDto) obj;
+                        dto.setDay(tradeDate);
+                    }
                 }
             }
         }
-        if (dto == null) {
+        if(dto == null) {
             dto = new CnDownTopDto();
             dto.setDownTopList(new ArrayList<>());
             dto.setUpTopList(new ArrayList<>());
             if(StringUtils.hasLength(tradeDate)){
                 dto.setDay(tradeDate);
             }else {
-                dto.setDay(DateHelper.dateToStr("yyyyMMdd", new Date()));
+                dto.setDay(DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, new Date()));
             }
         }
         return dto;
@@ -89,7 +153,7 @@ public class TaoData {
             return null;
         }
         log.info("tsCode:{}", tsCode);
-        return dao.getSymbolDailyBetween(tsCode, low, end);
+        return taoDao.getSymbolDailyBetween(tsCode, low, end);
     }
 
     public List<String> getHoliday(String start,String end){
@@ -106,7 +170,7 @@ public class TaoData {
 
     public List<CnStockDailyDto> getSymbol(String tsCode){
         int limit = 150;
-        List<CnStockDailyStat> dailyStatList = dao.getSymbolStat(tsCode, limit);
+        List<CnStockDailyStat> dailyStatList = taoDao.getSymbolStat(tsCode, limit);
         List<CnStockDailyDto> dailyDtoList = new ArrayList<>();
         if(!CollectionUtils.isEmpty(dailyStatList)) {
             int startOffset = ((dailyStatList.size() > limit) ? (dailyStatList.size() - limit) : 0);
@@ -119,8 +183,10 @@ public class TaoData {
                 dailyDtoList.add(dto);
             }
         }
-        MACD macd = new MACD(12, 26, 9);
-        macd.calculate(dailyDtoList, CnStockDailyDto::getPrice, CnStockDailyDto::setMacd);
+        if(!CollectionUtils.isEmpty(dailyDtoList)) {
+            MACD macd = new MACD(12, 26, 9);
+            macd.calculate(dailyDtoList, CnStockDailyDto::getPrice, CnStockDailyDto::setMacd);
+        }
         return dailyDtoList;
     }
 
@@ -186,7 +252,7 @@ public class TaoData {
         Date today = DateHelper.getDataDate();
         Date last30 = DateHelper.beforeNDays(today, MAX_DATE);
         Pair<String, String> yearMonth = DateHelper.getOneYearM();
-        String tradeDate = DateHelper.dateToStr("yyyyMMdd", last30);
+        String tradeDate = DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, last30);
 
         /**获取每日大盘**/
         String mdKey = String.format("MD-%s", tradeDate);
@@ -278,8 +344,13 @@ public class TaoData {
     }
 
     private CnDownTopDto getTopDown(Date date){
-        IndicatorCalc indicatorCalc = new IndicatorCalc(dao, tuShareClient, this);
+        IndicatorCalc indicatorCalc = new IndicatorCalc(taoDao, tuShareClient, this);
         return indicatorCalc.getDayDownUpTop(date);
+    }
+
+    private List<QuaintFilterDto> getQuaintFilter(Date tradeDate){
+        IndicatorCalc indicatorCalc = new IndicatorCalc(taoDao, tuShareClient, this);
+        return indicatorCalc.quaintFilter(tradeDate);
     }
 
     private List<DailyDto> loadDailyIndex(String symbol){
@@ -386,7 +457,7 @@ public class TaoData {
 
     private List<MarketDailyDto> loadMarketDaily(String key,Date last30){
         log.info("loadMarketDaily:{}", key);
-        List<CnMarketDaily> cnMarketDailyList = dao.loadDailyMarket(last30);
+        List<CnMarketDaily> cnMarketDailyList = taoDao.loadDailyMarket(last30);
         if(CollectionUtils.isEmpty(cnMarketDailyList)){
             return new ArrayList<>();
         }

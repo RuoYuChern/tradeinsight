@@ -6,17 +6,16 @@
 <div th:replace="~{tao_header :: tao-head}"></div>
 
 <div class="container-fluid">
-    <div class="row flex-xl-nowrap">
-        <div class="col-sm-1 col-lg-1">
-            <form th:action="@{/view-symbol}" method="get">
-                <div class="form-group">
-                    <label for="stock" th:text="#{stockName}"></label>
-                    <input type="text" class="form-control" id="stock" name="stock" placeholder="海康威视" required autofocus>
-                </div>
-                <button id="submit" type="submit" class="btn btn-primary" th:text="#{submit}"></button>
-            </form>
+    <div class="row d-flex justify-content-end">
+      <form class="form-inline" th:action="@{/view-symbol}" method="get">
+        <div class="form-group">
+         <input type="text" class="form-control mr-sm-2" id="stock" name="stock" placeholder="海康威视" required autofocus>
+         <button id="submit" type="submit" class="btn btn-primary mr-sm-2" th:text="#{submit}"></button>
         </div>
-        <div class="col-sm-11 col-lg-11">
+      </form>
+    </div>
+    <div class="row flex-xl-nowrap">
+        <div class="col-sm-12 col-lg-12">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title" th:text="(${dailyList} == null)? #{noData} : ${stock}"></h5>
@@ -35,7 +34,7 @@
     [# th:if="(${dailyList} != null)"]
         var trend = {
             series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},{name: "WMA-10",data: []}],
-            chart: {height: 450,type: 'line',zoom: {enabled: false}},
+            chart: {height: 470,type: 'line',zoom: {enabled: false}},
             dataLabels: {enabled: false},
             stroke: {curve: 'smooth', width:2},
             grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},

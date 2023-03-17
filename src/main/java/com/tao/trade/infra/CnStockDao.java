@@ -140,6 +140,23 @@ public class CnStockDao {
     }
 
     @Transactional
+    public int batchInsertFind(List<QuaintFind> findList){
+        List<QuaintFind> list = new ArrayList<>(50);
+        for (QuaintFind find: findList) {
+            list.add(find);
+            if(list.size() >= 50) {
+                customMapper.batchInsertFind(list);
+                list.clear();
+            }
+        }
+        if(list.size() > 0){
+            customMapper.batchInsertFind(list);
+            list.clear();
+        }
+        return findList.size();
+    }
+
+    @Transactional
     public int batchInsertDailyStat(List<CnStockDailyStat> dailyStatList){
         List<CnStockDailyStat> batchList = new ArrayList<>(50);
         for(CnStockDailyStat ds:dailyStatList){

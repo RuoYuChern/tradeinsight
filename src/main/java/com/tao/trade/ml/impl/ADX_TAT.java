@@ -1,5 +1,6 @@
 package com.tao.trade.ml.impl;
 
+import com.tao.trade.ml.FilterResult;
 import com.tao.trade.facade.IndicatorDto;
 import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.facade.MarketSignal;
@@ -12,15 +13,27 @@ import java.util.List;
 public class ADX_TAT implements QFilter {
     private static final int PERIOD = 18;
     private static final int TOP_DAY = 25;
+    private static final int MAX_TIMES = 7;
+    private final int num;
+
+    public ADX_TAT(int num) {
+        this.num = num;
+    }
+
     @Override
-    public MarketSignal filter(List<CnStockDaily> stockList) {
-        int delta = (TOP_DAY - PERIOD);
+    public int code() {
+        return num;
+    }
+
+    @Override
+    public FilterResult filter(List<CnStockDaily> stockList) {
+        int delta = (2*PERIOD);
         if(stockList.size() <= (3*PERIOD)){
-            return MarketSignal.NO;
+            return QFilter.NO;
         }
-        List<IndicatorDto> indList = TimeSeries.ADX_CALC(PERIOD, (TOP_DAY - PERIOD), stockList);
+        List<IndicatorDto> indList = TimeSeries.ADX_CALC(PERIOD, delta, stockList);
         if(indList.size() < PERIOD){
-            return MarketSignal.NO;
+            return QFilter.NO;
         }
         /**SUAN sma**/
         int cure = indList.size() -1;
@@ -29,23 +42,52 @@ public class ADX_TAT implements QFilter {
         boolean isNewHigh = isLastHigh(TOP_DAY, stockList);
         boolean isNewLow  = isLastLow(TOP_DAY, stockList);
 
-        if(last.getValue().compareTo(sma) > 0){
+        FilterResult result = new FilterResult();
+        result.setScore(last.getValue().subtract(sma));
+        boolean isContinue = false;
+        for(int i = 0; i < MAX_TIMES; i++) {
+            IndicatorDto ind = indList.get(cure - i);
+            if (ind.getValue().compareTo(sma) > 0) {
+                isContinue = true;
+                continue;
+            }
+            isContinue = false;
+            break;
+        }
+        /**连续大**/
+        if(isContinue){
             if(isNewHigh){
-                return MarketSignal.BUY;
+                result.setSignal(MarketSignal.BUY);
+                return result;
             }
             if(isNewLow){
-                return MarketSignal.SELL;
+                result.setSignal(MarketSignal.SELL);
+                return result;
             }
         }
-        if(last.getValue().compareTo(sma) < 0){
+
+        /**连续小**/
+        isContinue = false;
+        for(int i = 0; i < MAX_TIMES; i++){
+            IndicatorDto ind = indList.get(cure - i);
+            if (ind.getValue().compareTo(sma) < 0) {
+                isContinue = true;
+                continue;
+            }
+            isContinue = false;
+            break;
+        }
+        if(isContinue){
             if(isNewHigh){
-                return MarketSignal.SELL;
+                result.setSignal(MarketSignal.SELL);
+                return result;
             }
             if(isNewLow){
-                return MarketSignal.BUY;
+                result.setSignal(MarketSignal.BUY);
+                return result;
             }
         }
-        return MarketSignal.NO;
+        return QFilter.NO;
     }
 
     private static boolean isLastHigh(int len, List<CnStockDaily> stockList){
@@ -54,8 +96,7 @@ public class ADX_TAT implements QFilter {
         BigDecimal price = stockList.get(end).getClosePrice();
         for(int i = start; i < end; i++){
             BigDecimal v = stockList.get(i).getClosePrice();
-
-            if(price.compareTo(v) <= 0){
+            if(v.compareTo(price) >= 0){
                 return false;
             }
         }

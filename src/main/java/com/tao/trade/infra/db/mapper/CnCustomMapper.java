@@ -13,4 +13,6 @@ public interface CnCustomMapper {
     int insertOrUpdate(SysStatus sysStatus);
     int batchInsertDailyStat(List<CnStockDailyStat> batchList);
     int insertOrUpdateDelta(DataDeltaDate row);
+    int batchInsertFind(List<QuaintFind> findList);
+    int batchInsertQuaintTrading(List<QuaintTrading> tradingList);
 }

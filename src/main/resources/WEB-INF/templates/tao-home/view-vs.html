@@ -6,19 +6,15 @@
 <div th:replace="~{tao_header :: tao-head}"></div>
 
 <div class="container-fluid">
+  <div class="row d-flex justify-content-end">
+    <form class="form-inline" th:action="@{/view-vs}" method="get">
+      <input type="text" class="form-control mr-sm-2" id="stock1" name="first" placeholder="海康威视" required autofocus>
+      <input type="text" class="form-control mr-sm-2" id="stock2" name="second" placeholder="恒瑞医药" required autofocus>
+      <button id="submit" type="submit" class="btn btn-primary mr-sm-2" th:text="#{submit}"></button>
+    </form>
+  </div>
   <div class="row flex-xl-nowrap">
-    <div class="col-sm-1 col-lg-1">
-      <form th:action="@{/view-vs}" method="get">
-        <div class="form-group">
-          <label for="stock1" th:text="#{stockName}"></label>
-          <input type="text" class="form-control" id="stock1" name="first" placeholder="海康威视" required autofocus>
-          <label for="stock2" th:text="#{stockName}"></label>
-          <input type="text" class="form-control" id="stock2" name="second" placeholder="恒瑞医药" required autofocus>
-        </div>
-        <button id="submit" type="submit" class="btn btn-primary" th:text="#{submit}"></button>
-      </form>
-    </div>
-    <div class="col-sm-5 col-lg-5">
+    <div class="col-sm-6 col-lg-6">
       <div class="card">
         <div class="card-body">
           <h5 class="card-title" th:text="(${firstList} == null)? #{noData} : ${first}"></h5>
@@ -51,7 +47,7 @@
         var first = {
             series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},
                 {name: "WMA-10",data: []}],
-            chart: {height: 450,type: 'line',zoom: {enabled: false}},
+            chart: {height: 470,type: 'line',zoom: {enabled: false}},
             dataLabels: {enabled: false},
             stroke: {curve: 'smooth', width:2},
             grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},
@@ -84,7 +80,7 @@
     [# th:if="(${secondList} != null)"]
         var second = {
             series: [{name: "Cur-Price",data: []},{name: "SMA-10",data: []},{name: "MA(200)",data: []},{name: "EMA-10",data: []},{name: "WMA-10",data: []}],
-            chart: {height: 450,type: 'line',zoom: {enabled: false}},
+            chart: {height: 470,type: 'line',zoom: {enabled: false}},
             dataLabels: {enabled: false},
             stroke: {curve: 'smooth', width:2},
             grid: {row: {colors: ['#f3f3f3', 'transparent'], opacity: 0.1},},

@@ -1,5 +1,6 @@
 package com.tao.trade.utils;
 
+import com.tao.trade.facade.TaoConstants;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.vo.TradeDateVo;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import java.util.List;
 
 @Slf4j
 public class DateHelper {
-    private static String TU_DATE_FMT = "yyyyMMdd";
     public static boolean dateEqual(Date first, Date second){
        return DateUtils.isSameDay(first, second);
     }
@@ -37,8 +37,8 @@ public class DateHelper {
     }
 
     public static Date getBiggerDate(TuShareClient tuShareClient, Date start, Date now){
-        String startDate = DateHelper.dateToStr(TU_DATE_FMT, start);
-        List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TU_DATE_FMT, now));
+        String startDate = DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, start);
+        List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, now));
         /**逆序**/
         for(int i = 0; i < list.size(); i++){
             TradeDateVo vo = list.get(i);
@@ -51,8 +51,8 @@ public class DateHelper {
     }
 
     public static Date getLessDay(TuShareClient tuShareClient, Date start, Date now){
-        String startDate = DateHelper.dateToStr(TU_DATE_FMT, start);
-        List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TU_DATE_FMT, now));
+        String startDate = DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, start);
+        List<TradeDateVo> list = tuShareClient.trade_cal(startDate, DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, now));
         /**逆序**/
         int offset = 0;
         Date last = null;

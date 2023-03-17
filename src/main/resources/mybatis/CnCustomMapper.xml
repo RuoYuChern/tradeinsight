@@ -79,4 +79,21 @@
         insert into public.data_delta_date (name, data_date)
         values (#{name,jdbcType=VARCHAR}, #{dataDate,jdbcType=DATE}) ON CONFLICT(name) DO UPDATE SET data_date = #{dataDate,jdbcType=DATE}
     </insert>
+    <insert id="batchInsertFind" parameterType="com.tao.trade.infra.db.model.QuaintFind">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.quaint_find (symbol, status, trade_date, close_price, strategy)
+            values (#{item.symbol,jdbcType=VARCHAR}, #{item.status,jdbcType=INTEGER},
+            #{item.tradeDate,jdbcType=DATE}, #{item.closePrice,jdbcType=NUMERIC}, #{item.strategy,jdbcType=VARCHAR})
+            ON CONFLICT(symbol, trade_date) DO NOTHING
+        </foreach>
+    </insert>
+    <insert id="batchInsertQuaintTrading" parameterType="com.tao.trade.infra.db.model.QuaintTrading">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            insert into public.quaint_trading (status, symbol,buy_date, sell_date, alert_price, buy_price, sell_price, strategy)
+            values (#{item.status,jdbcType=INTEGER}, #{item.symbol,jdbcType=VARCHAR},
+            #{item.buyDate,jdbcType=DATE}, #{item.sellDate,jdbcType=DATE}, #{item.alertPrice,jdbcType=NUMERIC},
+            #{item.buyPrice,jdbcType=NUMERIC}, #{item.sellPrice,jdbcType=NUMERIC}, #{item.strategy,jdbcType=VARCHAR})
+            ON CONFLICT(symbol, buy_date) DO NOTHING
+        </foreach>
+    </insert>
 </mapper>
