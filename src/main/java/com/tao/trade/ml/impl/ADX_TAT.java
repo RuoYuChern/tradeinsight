@@ -12,8 +12,8 @@ import java.math.RoundingMode;
 import java.util.List;
 
 public class ADX_TAT implements QFilter {
-    private static final int PERIOD = 20;
-    private static final int TOP_DAY = 50;
+    private static final int PERIOD = 18;
+    private static final int TOP_DAY = 25;
     private final int num;
 
     public ADX_TAT(int num) {
