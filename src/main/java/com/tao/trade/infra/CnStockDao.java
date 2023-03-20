@@ -1,6 +1,7 @@
 package com.tao.trade.infra;
 
 import com.alibaba.fastjson.JSON;
+import com.tao.trade.facade.QuaintTradingDto;
 import com.tao.trade.infra.db.mapper.*;
 import com.tao.trade.infra.db.model.*;
 import com.tao.trade.infra.vo.StockBasicVo;
@@ -41,6 +42,11 @@ public class CnStockDao {
     private SysStatusMapper sysStatusMapper;
     @Autowired
     private DataDeltaDateMapper deltaMapper;
+
+    @Autowired
+    private QuaintTradingMapper tradingMapper;
+    @Autowired
+    private QuaintFindMapper findMapper;
 
     public boolean hasLocked(String name){
         SysStatusExample example = new SysStatusExample();
@@ -175,6 +181,39 @@ public class CnStockDao {
         return dailyStatList.size();
     }
 
+    public int insertQuaintTrading(QuaintTradingDto dto){
+        QuaintTrading row = new QuaintTrading();
+        row.setAlertPrice(dto.getPrice());
+        row.setStatus(dto.getStatus());
+        row.setSymbol(dto.getTsCode());
+        row.setBuyDate(dto.getBuyDate());
+        row.setBuyPrice(dto.getBuyPrice());
+        row.setSellDate(new Date());
+        row.setSellPrice(BigDecimal.ZERO);
+        row.setStrategy(dto.getStrategy());
+        try{
+            return tradingMapper.insertSelective(row);
+        }catch (Throwable t){
+            log.info("insert exceptions:{}", t.getMessage());
+            return -1;
+        }
+    }
+
+    public int insertQuaintFind(QuaintTradingDto dto){
+        QuaintFind row = new QuaintFind();
+        row.setStatus(dto.getStatus());
+        row.setTradeDate(dto.getAlterDate());
+        row.setSymbol(dto.getTsCode());
+        row.setClosePrice(dto.getPrice());
+        row.setStrategy(dto.getStrategy());
+        try{
+            return findMapper.insertSelective(row);
+        }catch (Throwable t){
+            log.info("insert exceptions:{}", t.getMessage());
+            return -1;
+        }
+    }
+
     public int updateDeltaDate(String name, Date date){
         DataDeltaDate deltaDate = new DataDeltaDate();
         deltaDate.setName(name);
@@ -240,5 +279,52 @@ public class CnStockDao {
         example.setOrderByClause("trade_date asc");
         List<CnMarketDaily> cmd = marketDailyMapper.selectByExample(example);
         return cmd;
+    }
+
+    public List<QuaintTradingDto> getQuaintFindList(Date lowDate, int status){
+        QuaintFindExample example = new QuaintFindExample();
+        example.createCriteria().andTradeDateGreaterThanOrEqualTo(lowDate).andStatusEqualTo(status);
+        try{
+            List<QuaintFind> list = findMapper.selectByExample(example);
+            List<QuaintTradingDto> qtList = new LinkedList<>();
+            for(QuaintFind qf:list){
+                QuaintTradingDto dto = new QuaintTradingDto();
+                dto.setTsCode(qf.getSymbol());
+                dto.setAlterDate(qf.getTradeDate());
+                dto.setPrice(qf.getClosePrice());
+                dto.setStatus(qf.getStatus());
+            }
+            return qtList;
+        }catch (Throwable t){
+            log.warn("getQuaintFindList:{}", t.getMessage());
+            return null;
+        }
+    }
+
+    public List<QuaintTradingDto> getQuaintTradingList(Date lowDate, int status){
+        QuaintTradingExample example = new QuaintTradingExample();
+        example.createCriteria().andBuyDateGreaterThanOrEqualTo(lowDate).andStatusEqualTo(status);
+        try{
+            List<QuaintTrading> tradingList = tradingMapper.selectByExample(example);
+            List<QuaintTradingDto> qtList = new LinkedList<>();
+            for (QuaintTrading qt: tradingList){
+                QuaintTradingDto dto = new QuaintTradingDto();
+                dto.setPrice(qt.getAlertPrice());
+                dto.setBuyDate(qt.getBuyDate());
+                dto.setBuyPrice(qt.getBuyPrice());
+                dto.setSellPrice(qt.getSellPrice());
+                dto.setSellDate(qt.getSellDate());
+
+                dto.setTsCode(qt.getSymbol());
+                dto.setStatus(qt.getStatus());
+                dto.setStrategy(qt.getStrategy());
+
+                qtList.add(dto);
+            }
+            return qtList;
+        }catch (Throwable t){
+            log.warn("getQuaintTradingList:{}", t.getMessage());
+            return null;
+        }
     }
 }

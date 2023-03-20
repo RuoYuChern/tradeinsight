@@ -1,12 +1,11 @@
 package com.tao.trade.proccess;
 
 import com.tao.trade.domain.TaoData;
-import com.tao.trade.facade.CnDownTopDto;
-import com.tao.trade.facade.QuaintDailyFilterDto;
-import com.tao.trade.facade.QuaintFilterDto;
-import com.tao.trade.facade.TaoConstants;
+import com.tao.trade.facade.*;
 import com.tao.trade.infra.CnStockDao;
+import com.tao.trade.infra.SinaClient;
 import com.tao.trade.infra.TuShareClient;
+import com.tao.trade.infra.vo.QuaintTradingStatus;
 import com.tao.trade.infra.vo.StockBasicVo;
 import com.tao.trade.utils.DateHelper;
 import com.tao.trade.utils.Help;
@@ -14,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,47 +29,33 @@ public class JobActors {
     private volatile boolean isDeltaDone;
     private final CnStockDao stockDao;
     private final TuShareClient tuShareClient;
+    private final SinaClient sinaClient;
     private final TaoData taoData;
     private ScheduledExecutorService scheduledActor;
+    private ScheduledExecutorService tradingActor;
 
     @Autowired
-    public JobActors(CnStockDao stockDao, TuShareClient tuShareClient, TaoData stockBaseData){
+    public JobActors(CnStockDao stockDao, TuShareClient tuShareClient, SinaClient sinaClient, TaoData stockBaseData){
         lock = new ReentrantLock();
         this.isDeltaDone = false;
         this.stockDao = stockDao;
         this.tuShareClient = tuShareClient;
+        this.sinaClient = sinaClient;
         this.taoData = stockBaseData;
 
         ThreadFactory threadFactory = r -> {Thread thread = new Thread(r, "batch-sch");return thread;};
         scheduledActor = Executors.newSingleThreadScheduledExecutor(threadFactory);
         scheduledActor.scheduleWithFixedDelay(()->schedule(), 60,300, TimeUnit.SECONDS);
+
+        threadFactory = r -> {Thread thread = new Thread(r, "trading-sch");return thread;};
+        tradingActor = Executors.newSingleThreadScheduledExecutor(threadFactory);
+        tradingActor.scheduleWithFixedDelay(()->trading(), 60,60, TimeUnit.SECONDS);
     }
 
     public void loadData(){
-        try{
-            lock.lock();
-            Date lastDate = stockDao.getDeltaDate(TaoConstants.DATA_DATE);
-            if((lastDate == null)){
-                log.info("{} is not exist", TaoConstants.DATA_DATE);
-                return;
-            }
-            List<StockBasicVo> basicVoList = Help.tryCall(()->tuShareClient.stock_basic("L"));
-            taoData.updateBasic(basicVoList);
-            IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, taoData);
-            CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
-            taoData.updateUpDownTop(cnDownTopDto);
-            log.info("loadData finish");
-        }catch (Throwable t){
-            log.info("loadData:{}", t.getMessage());
-        }finally {
-            log.info("loadData unlock");
-            lock.unlock();
-        }
-    }
-
-    private void schedule(){
-        handleDelta();
+        loadTopDown();
         handleFind();
+        loadQuaintTrading();
     }
 
     public void addHistory(){
@@ -83,7 +69,7 @@ public class JobActors {
         thread.start();
     }
 
-    public void handleFind(){
+    private void handleFind(){
         try {
             Date dataDate = stockDao.getDeltaDate(TaoConstants.DATA_DATE);
             if(dataDate == null){
@@ -102,17 +88,89 @@ public class JobActors {
         }
     }
 
-    private void handleDelta(){
+    private void schedule(){
+        boolean r = handleDelta();
+        if(r) {
+            handleFind();
+        }
+    }
+
+    private void trading(){
+        try {
+            Date now = new Date();
+            if (!DateHelper.isTradingTime(now)) {
+                return;
+            }
+            Date cureEndDate = DateHelper.getBiggerDate(tuShareClient, now, now);
+            if (cureEndDate == null) {
+                log.info("new is out of:{}", now);
+                return;
+            }
+            QuaintTrading trading = new QuaintTrading(sinaClient, taoData, stockDao);
+            trading.handle();
+        }catch (Throwable t){
+            log.warn("trading:{}", t.getMessage());
+        }
+    }
+
+    private void loadQuaintTrading(){
+        Date lastDate = stockDao.getDeltaDate(TaoConstants.DATA_DATE);
+        if((lastDate == null)){
+            log.info("{} is not exist", TaoConstants.DATA_DATE);
+            return;
+        }
+        Date lowDate = DateHelper.beforeNDays(lastDate, TaoConstants.MAX_QUAINT_SELL_DAY);
+        List<QuaintTradingDto> quaintList = stockDao.getQuaintTradingList(lowDate, QuaintTradingStatus.BUY.getStatus());
+        lowDate = DateHelper.beforeNDays(lastDate, TaoConstants.MAX_QUAINT_BUY_DAY);
+        List<QuaintTradingDto> findList = stockDao.getQuaintFindList(lowDate, QuaintTradingStatus.TRADING.getStatus());
+        if(!CollectionUtils.isEmpty(quaintList)){
+            log.info("quaintList:{}", quaintList.size());
+            for(QuaintTradingDto dto:quaintList){
+                dto.setName(taoData.getStockName(dto.getTsCode()));
+            }
+            taoData.updateQuaintTradingList(quaintList);
+        }
+
+        if(!CollectionUtils.isEmpty(findList)){
+            log.info("findList:{}", findList.size());
+            for(QuaintTradingDto dto:findList){
+                dto.setName(taoData.getStockName(dto.getTsCode()));
+            }
+            taoData.updateQuaintTradingList(findList);
+        }
+    }
+
+    private void loadTopDown(){
+        try{
+            Date lastDate = stockDao.getDeltaDate(TaoConstants.DATA_DATE);
+            if((lastDate == null)){
+                log.info("{} is not exist", TaoConstants.DATA_DATE);
+                return;
+            }
+            List<StockBasicVo> basicVoList = Help.tryCall(()->tuShareClient.stock_basic("L"));
+            taoData.updateBasic(basicVoList);
+            IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, taoData);
+            CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
+            taoData.updateUpDownTop(cnDownTopDto);
+            log.info("loadData finish");
+        }catch (Throwable t){
+            log.info("loadData:{}", t.getMessage());
+        }finally {
+            log.info("loadData unlock");
+        }
+    }
+
+    private boolean handleDelta(){
         try{
             log.info("schedule start");
             lock.lock();
             if(DateHelper.isHourBefore(17)){
                 isDeltaDone = false;
-                return;
+                return false;
             }
             if(!stockDao.hasLocked(TaoConstants.LOCK_HISTORY)){
                 log.info("Does not have initialized");
-                return;
+                return false;
             }
             Date now = new Date();
             Date dataDate = stockDao.getDeltaDate(TaoConstants.DATA_DATE);
@@ -124,13 +182,13 @@ public class JobActors {
                     log.info("set : isDeltaDone = {}", isDeltaDone);
                 }
                 log.info("lastDeltaDate is null or eq today:{}",str);
-                return;
+                return false;
             }
             Date cureStartDate = DateHelper.afterNDays(dataDate, 1);
             Date cureEndDate = DateHelper.getBiggerDate(tuShareClient, cureStartDate, now);
             if(cureEndDate == null){
                 log.info("new is out of:{}", cureStartDate);
-                return;
+                return false;
             }
             /**判断是否节假日**/
             List<StockBasicVo> basicVoList = tuShareClient.stock_basic("L");
@@ -148,8 +206,10 @@ public class JobActors {
             taoData.updateUpDownTop(cnDownTopDto);
             log.info("schedule finish");
             isDeltaDone = true;
+            return true;
         }catch (Throwable t){
             log.info("schedule:", t);
+            return false;
         }finally {
             log.info("schedule unlock");
             lock.unlock();

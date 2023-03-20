@@ -87,6 +87,21 @@ public class DateHelper {
         }
     }
 
+    public static boolean isTradingTime(Date dateTime){
+        String date = dateToStr(TaoConstants.TU_DATE_FMT, dateTime);
+        Date mLow = strToDate(TaoConstants.TU_DATE_TIME_FMT, String.format("%s09:30:00", date));
+        Date mHigh = strToDate(TaoConstants.TU_DATE_TIME_FMT, String.format("%s12:00:00", date));
+        if(dateTime.after(mLow) && dateTime.before(mHigh)){
+            return true;
+        }
+        mLow = strToDate(TaoConstants.TU_DATE_TIME_FMT, String.format("%s13:00:00", date));
+        mHigh = strToDate(TaoConstants.TU_DATE_TIME_FMT, String.format("%s15:00:00", date));
+        if(dateTime.after(mLow) && dateTime.before(mHigh)){
+            return true;
+        }
+        return false;
+    }
+
     public static int daysDiff(Date now, Date before){
         long diff = now.getTime() - before.getTime();
         return (int)(diff/(1000*60*60*24));

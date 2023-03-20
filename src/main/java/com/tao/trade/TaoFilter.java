@@ -33,10 +33,12 @@ public class TaoFilter extends OncePerRequestFilter {
         urlMap.put("/view-vs", Boolean.TRUE);
         urlMap.put("/favicon.ico", Boolean.TRUE);
         urlMap.put("/talk", Boolean.TRUE);
+        urlMap.put("/trading", Boolean.TRUE);
         urlMap.put("/api/admin/history-load", Boolean.TRUE);
         urlMap.put("/api/ai/talk", Boolean.TRUE);
         urlMap.put("/api/ai/set", Boolean.TRUE);
         urlMap.put("/api/hq/get-symbol", Boolean.TRUE);
+        urlMap.put("/api/trading/quaint-buy", Boolean.TRUE);
         accessTimes = new AtomicInteger(0);
         md5Sig = new Md5Sig();
     }
@@ -60,7 +62,7 @@ public class TaoFilter extends OncePerRequestFilter {
         if(b == null){
             return false;
         }
-        if(!url.startsWith("/api/hq")){
+        if(!url.startsWith("/api/hq") && !url.startsWith("/api/trading")){
             return true;
         }
         String sign = request.getHeader("X-TJ-SIGNATURE");

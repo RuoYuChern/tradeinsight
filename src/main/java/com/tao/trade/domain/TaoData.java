@@ -2,6 +2,7 @@ package com.tao.trade.domain;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.tao.trade.api.facade.QuaintTradeDto;
 import com.tao.trade.facade.*;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.SinaClient;
@@ -23,6 +24,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ public class TaoData {
     private AtomicReference<List<StockBasicVo>> basicVoList;
     private volatile Map<String, StockBasicVo> basicVoMap;
     private volatile Map<String, String> nameTsCode;
+    private List<QuaintTradingDto> quaintTradingList;
     private AtomicReference<CnDownTopDto> cnDownTopDto;
     private AtomicReference<QuaintDailyFilterDto> quaintDailyFilterDto;
     private Cache<String, Object> marketDaily;
@@ -53,8 +56,33 @@ public class TaoData {
                 .maximumSize(15)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
+        quaintTradingList = new LinkedList<>();
         cnDownTopDto = new AtomicReference<>();
         quaintDailyFilterDto = new AtomicReference<>();
+    }
+
+    public void addQuaint(QuaintTradeDto quaintDto){
+        String tsCode = getTsCode(quaintDto.getStock());
+        if(!StringUtils.hasLength(tsCode)){
+            throw new RuntimeException(String.format("Can not find such stock:%s", quaintDto.getStock()));
+        }
+        QuaintTradingDto tradingDto = new QuaintTradingDto();
+        tradingDto.setName(quaintDto.getStock());
+        tradingDto.setTsCode(tsCode);
+        tradingDto.setStrategy(quaintDto.getStrategy());
+        tradingDto.setStatus(QuaintTradingStatus.TRADING.getStatus());
+        tradingDto.setAlterDate(new Date());
+        tradingDto.setPrice(quaintDto.getPrice());
+        taoDao.insertQuaintFind(tradingDto);
+        synchronized (this){
+            quaintTradingList.add(tradingDto);
+        }
+    }
+
+    public void updateQuaintTradingList(List<QuaintTradingDto> tradingList){
+        synchronized (this){
+            quaintTradingList.addAll(tradingList);
+        }
     }
 
 
@@ -244,6 +272,70 @@ public class TaoData {
             return null;
         }
         return basicVoMap.get(tsCode);
+    }
+
+    public TradingDto getQuaintTrading(String year){
+        TradingDto tradingDto = new TradingDto();
+        if(!StringUtils.hasLength(year)){
+            year = DateHelper.dateToStr("yyyy", new Date());
+        }
+        String date = String.format("%s0101", year);
+        int totalNum = 0;
+        int lossNum = 0;
+        double amount = 0;
+        double pnl = 0;
+        Date lowDate = DateHelper.strToDate(TaoConstants.TU_DATE_FMT, date);
+        List<QuaintTradingDto> quaintList = taoDao.getQuaintTradingList(lowDate, QuaintTradingStatus.BUY.getStatus());
+        for(QuaintTradingDto dto:quaintList){
+            QuaintDto qdt = new QuaintDto();
+            qdt.setStock(getStockName(dto.getTsCode()));
+            qdt.setTradePrice(dto.getPrice());
+            qdt.setBuyPrice(dto.getBuyPrice());
+            qdt.setSellPrice(BigDecimal.ZERO);
+            qdt.setPnl(BigDecimal.ZERO);
+
+            qdt.setBuyDate(DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dto.getBuyDate()));
+            qdt.setSellDate("--/--");
+            qdt.setHoldDays(DateHelper.daysDiff(new Date(), dto.getBuyDate()));
+            qdt.setStatus("持仓");
+            qdt.setStrategy(dto.getStrategy());
+
+            amount += dto.getBuyPrice().multiply(TaoConstants.QUAINT_TRADE_NUMBER).doubleValue();
+            totalNum += 1;
+            tradingDto.getQuaintList().add(qdt);
+        }
+
+        quaintList = taoDao.getQuaintTradingList(lowDate, QuaintTradingStatus.SELL.getStatus());
+        for(QuaintTradingDto dto:quaintList){
+            QuaintDto qdt = new QuaintDto();
+            qdt.setStock(getStockName(dto.getTsCode()));
+            qdt.setTradePrice(dto.getPrice());
+            qdt.setBuyPrice(dto.getBuyPrice());
+            qdt.setSellPrice(dto.getSellPrice());
+            BigDecimal diff = dto.getSellPrice().subtract(dto.getBuyPrice());
+            qdt.setPnl(diff.multiply(TaoConstants.QUAINT_TRADE_NUMBER).setScale(2, RoundingMode.HALF_DOWN));
+
+            qdt.setBuyDate(DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dto.getBuyDate()));
+            qdt.setSellDate(DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dto.getSellDate()));
+            qdt.setHoldDays(DateHelper.daysDiff(dto.getSellDate(), dto.getBuyDate()));
+            qdt.setStatus("清仓");
+            qdt.setStrategy(dto.getStrategy());
+
+            amount += dto.getBuyPrice().multiply(TaoConstants.QUAINT_TRADE_NUMBER).doubleValue();
+            totalNum += 1;
+
+            pnl += qdt.getPnl().doubleValue();
+            if(diff.compareTo(BigDecimal.ZERO) < 0){
+                lossNum += 1;
+            }
+            tradingDto.getQuaintList().add(qdt);
+        }
+
+        tradingDto.setTotalNumber(totalNum);
+        tradingDto.setTotalMoney(new BigDecimal(amount).setScale(2, RoundingMode.HALF_DOWN));
+        tradingDto.setLossNumber(lossNum);
+        tradingDto.setPnl(new BigDecimal(pnl).setScale(2, RoundingMode.HALF_DOWN));
+        return tradingDto;
     }
 
     public DashBoardDto getDashBoard(){

@@ -152,4 +152,15 @@ public class Tao {
     public String talk(Model model){
         return String.format("%s/talk.html", prefix);
     }
+
+    @GetMapping("/trading")
+    public String trading(@RequestParam(name="year", required = false) String year, Model model){
+        TradingDto tradingDto = taoData.getQuaintTrading(year);
+        model.addAttribute("tradingNumber", tradingDto.getTotalNumber());
+        model.addAttribute("amount", tradingDto.getTotalMoney());
+        model.addAttribute("lossNumber", tradingDto.getLossNumber());
+        model.addAttribute("pnl", tradingDto.getPnl());
+        model.addAttribute("quaintList", tradingDto.getQuaintList());
+        return String.format("%s/trading.html", prefix);
+    }
 }
