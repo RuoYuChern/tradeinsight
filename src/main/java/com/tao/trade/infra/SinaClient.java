@@ -72,13 +72,14 @@ public class SinaClient {
             System.out.println("values:" + values);
             String [] stockPrices = values.split(";");
             List<SinaRealVo> voList = new ArrayList<>(stocks.size());
-            int num = 0;
             for(String p:stockPrices){
                 if(StringUtils.hasLength(p)) {
                     SinaRealVo vo = from(p);
-                    vo.setTsCode(stocks.get(num));
-                    voList.add(vo);
-                    num++;
+                    String tsCode = getTsCode(p);
+                    if(StringUtils.hasLength(tsCode)) {
+                        vo.setTsCode(tsCode);
+                        voList.add(vo);
+                    }
                 }
             }
             return voList;
@@ -87,6 +88,25 @@ public class SinaClient {
             log.info("getReal exceptions:", t);
         }
         return null;
+    }
+
+    private static String getTsCode(String value){
+        int pos = value.indexOf("hq_str_");
+        int end = value.indexOf("=", pos + 1);
+        if(pos < 0 || end < 0){
+            throw null;
+        }
+        String ts = value.substring(pos + "hq_str_".length(), end);
+        if(ts.startsWith("sz")){
+            return String.format("%s.SZ", ts.substring(2));
+        }
+        if(ts.startsWith("sh")){
+            return String.format("%s.SH", ts.substring(2));
+        }
+        if(ts.startsWith("bj")) {
+            return String.format("%s.BJ", ts.substring(2));
+        }
+        return ts;
     }
 
     private static SinaRealVo from(String value){
@@ -123,16 +143,16 @@ public class SinaClient {
         return st;
     }
 
-    public static void main(String []args){
-        List<String> list = new ArrayList<>(3);
-        list.add("000506.SZ");
-        list.add("600339.SH");
-        list.add("832735.BJ");
-
-        SinaClient sinaClient = new SinaClient();
-        List<SinaRealVo> realVos = sinaClient.getReal(list);
-        for(SinaRealVo vo:realVos){
-            System.out.println(JSON.toJSONString(vo));
-        }
-    }
+//    public static void main(String []args){
+//        List<String> list = new ArrayList<>(3);
+//        list.add("000506.SZ");
+//        list.add("600339.SH");
+//        list.add("832735.BJ");
+//
+//        SinaClient sinaClient = new SinaClient();
+//        List<SinaRealVo> realVos = sinaClient.getReal(list);
+//        for(SinaRealVo vo:realVos){
+//            System.out.println(JSON.toJSONString(vo));
+//        }
+//    }
 }

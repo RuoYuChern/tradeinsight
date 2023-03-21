@@ -28,6 +28,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -45,7 +46,7 @@ public class TaoData {
     private AtomicReference<List<StockBasicVo>> basicVoList;
     private volatile Map<String, StockBasicVo> basicVoMap;
     private volatile Map<String, String> nameTsCode;
-    private List<QuaintTradingDto> quaintTradingList;
+    private AtomicReference<List<QuaintTradingDto>> quaintTradingList;
     private AtomicReference<CnDownTopDto> cnDownTopDto;
     private AtomicReference<QuaintDailyFilterDto> quaintDailyFilterDto;
     private Cache<String, Object> marketDaily;
@@ -56,7 +57,7 @@ public class TaoData {
                 .maximumSize(15)
                 .expireAfterWrite(30, TimeUnit.MINUTES)
                 .build();
-        quaintTradingList = new LinkedList<>();
+        quaintTradingList = new AtomicReference<>();
         cnDownTopDto = new AtomicReference<>();
         quaintDailyFilterDto = new AtomicReference<>();
     }
@@ -75,22 +76,36 @@ public class TaoData {
         tradingDto.setPrice(quaintDto.getPrice());
         taoDao.insertQuaintFind(tradingDto);
         synchronized (this){
-            quaintTradingList.add(tradingDto);
+            if(quaintTradingList.get() == null){
+                quaintTradingList.set(new LinkedList<>());
+            }
+            quaintTradingList.get().add(tradingDto);
         }
     }
 
     public void updateQuaintTradingList(List<QuaintTradingDto> tradingList){
         synchronized (this){
-            quaintTradingList.addAll(tradingList);
+            if(quaintTradingList.get() == null){
+                quaintTradingList.set(new LinkedList<>());
+            }
+            quaintTradingList.get().addAll(tradingList);
         }
     }
 
+    public List<QuaintTradingDto> getQuaintTradingList(){
+        if(quaintTradingList.get() == null){
+            return null;
+        }
+        synchronized (this){
+            return quaintTradingList.getAndSet(null);
+        }
+    }
 
     public void updateQuaintFilter(QuaintDailyFilterDto dto){
         quaintDailyFilterDto.set(dto);
     }
 
-    public Pair<Integer,QuaintDailyFilterDto> getQuaintFilter(String date, int pageNum, int pageSize){
+    public Pair<Integer,QuaintDailyFilterDto> getQuaintFilter(String date, String signal, int pageNum, int pageSize){
         List<QuaintFilterDto> list = null;
         if(!StringUtils.hasLength(date)){
             if(quaintDailyFilterDto.get() != null) {
@@ -121,9 +136,18 @@ public class TaoData {
         Integer total = 0;
         List<QuaintFilterDto> qList = new LinkedList<>();
         if(!CollectionUtils.isEmpty(list)){
-            total = (list.size()/pageSize) + (((list.size() % pageSize) == 0)? 0:1);
+            if(StringUtils.hasLength(signal)) {
+                AtomicInteger sum = new AtomicInteger(0);
+                list.forEach(r -> {if(r.getStrategyList().contains(signal)){ sum.incrementAndGet();}});
+                total = (sum.get() / pageSize) + (((sum.get() % pageSize) == 0) ? 0 : 1);
+            }else {
+                total = (list.size() / pageSize) + (((list.size() % pageSize) == 0) ? 0 : 1);
+            }
             int offset = (pageNum - 1) * pageSize;
             for(QuaintFilterDto dto: list){
+                if(StringUtils.hasLength(signal) && !dto.getStrategyList().contains(signal)){
+                    continue;
+                }
                 if(offset > 0){
                     offset -= 1;
                     continue;
@@ -442,7 +466,7 @@ public class TaoData {
 
     private List<QuaintFilterDto> getQuaintFilter(Date tradeDate){
         IndicatorCalc indicatorCalc = new IndicatorCalc(taoDao, tuShareClient, this);
-        return indicatorCalc.quaintFilter(tradeDate);
+        return indicatorCalc.quaintDailyFilter(tradeDate);
     }
 
     private List<DailyDto> loadDailyIndex(String symbol){

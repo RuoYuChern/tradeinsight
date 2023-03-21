@@ -1,10 +1,7 @@
 package com.tao.trade.proccess;
 
 import com.tao.trade.domain.TaoData;
-import com.tao.trade.facade.CnDownTopDto;
-import com.tao.trade.facade.QuaintFilterDto;
-import com.tao.trade.facade.StockBaseDto;
-import com.tao.trade.facade.TaoConstants;
+import com.tao.trade.facade.*;
 import com.tao.trade.infra.CnStockDao;
 import com.tao.trade.infra.TuShareClient;
 import com.tao.trade.infra.db.model.CnStockDaily;
@@ -12,7 +9,9 @@ import com.tao.trade.infra.db.model.CnStockDailyStat;
 import com.tao.trade.infra.vo.StockBasicVo;
 import com.tao.trade.ml.FilterResult;
 import com.tao.trade.ml.MarketFilterChain;
+import com.tao.trade.ml.QStatFilter;
 import com.tao.trade.ml.TimeSeries;
+import com.tao.trade.ml.impl.WMA_TAT;
 import com.tao.trade.utils.DateHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
@@ -108,7 +107,7 @@ public class IndicatorCalc{
         }
     }
 
-    public List<QuaintFilterDto> quaintFilter(Date dataDate){
+    public List<QuaintFilterDto> quaintDailyFilter(Date dataDate){
         List<StockBasicVo> list = taoData.getBasic();
         if(CollectionUtils.isEmpty(list)){
             return null;
@@ -143,6 +142,46 @@ public class IndicatorCalc{
             QuaintFilterDto quaintFind = new QuaintFilterDto();
             CnStockDaily daily = dailyList.get(dailyList.size() - 1);
             quaintFind.setTsCode(daily.getSymbol());
+            quaintFind.setStock(vo.getName());
+            quaintFind.setIndustry(vo.getIndustry());
+            quaintFind.setStrategyList(sb.toString());
+            findList.add(quaintFind);
+        }
+        return findList;
+    }
+
+    public List<QuaintFilterDto> quaintStatFilter(Date dataDate){
+        List<StockBasicVo> list = taoData.getBasic();
+        if(CollectionUtils.isEmpty(list)){
+            return null;
+        }
+        Date lowDate = DateHelper.beforeNDays(dataDate, MarketFilterChain.getStatSize()*4);
+        log.info("Find day={}, lowDay={}",DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dataDate),
+                DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, lowDate));
+        List<QuaintFilterDto> findList = new LinkedList<>();
+        QStatFilter qStatFilter = new WMA_TAT(MarketFilterChain.getStatSize());
+        for(StockBasicVo vo:list){
+            if(vo.getName().contains("ST")){
+                continue;
+            }
+            List<CnStockDailyStat> dailyList = stockDao.getSymbolStatBetween(vo.getTsCode(), lowDate, dataDate);
+            if(dailyList.size() > MarketFilterChain.getStatSize()){
+                int start = dailyList.size() - MarketFilterChain.getStatSize();
+                dailyList = dailyList.subList(start, dailyList.size());
+            }
+            FilterResult result = qStatFilter.filter(dailyList);
+            if(result.getSignal().equals(MarketSignal.NO)){
+                continue;
+            }
+            StringBuilder sb = new StringBuilder();
+            boolean isFirst = true;
+            sb.append("[");
+            sb.append("{").append("\"name\":\"");
+            sb.append(result.getName()).append("\",");
+            sb.append("\"signal\":\"").append(result.getSignal()).append("\"}");
+            sb.append("]");
+            QuaintFilterDto quaintFind = new QuaintFilterDto();
+            quaintFind.setTsCode(vo.getTsCode());
             quaintFind.setStock(vo.getName());
             quaintFind.setIndustry(vo.getIndustry());
             quaintFind.setStrategyList(sb.toString());

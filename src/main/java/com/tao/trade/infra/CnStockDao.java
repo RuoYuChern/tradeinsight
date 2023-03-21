@@ -214,6 +214,24 @@ public class CnStockDao {
         }
     }
 
+    public void updateQuaintTrading(QuaintTradingDto dto){
+        QuaintTrading row = new QuaintTrading();
+        row.setStatus(dto.getStatus());
+        row.setSellPrice(dto.getSellPrice());
+        row.setSellDate(dto.getSellDate());
+        QuaintTradingExample example = new QuaintTradingExample();
+        example.createCriteria().andSymbolEqualTo(dto.getTsCode()).andBuyDateEqualTo(dto.getBuyDate());
+        tradingMapper.updateByExampleSelective(row, example);
+    }
+
+    public void updateQuaintFind(String symbol, Date tradeDate, int status){
+        QuaintFind row = new QuaintFind();
+        row.setStatus(status);
+        QuaintFindExample example = new QuaintFindExample();
+        example.createCriteria().andSymbolEqualTo(symbol).andTradeDateEqualTo(tradeDate);
+        findMapper.updateByExampleSelective(row, example);
+    }
+
     public int updateDeltaDate(String name, Date date){
         DataDeltaDate deltaDate = new DataDeltaDate();
         deltaDate.setName(name);
@@ -245,6 +263,14 @@ public class CnStockDao {
         }else{
             return null;
         }
+    }
+
+    public List<CnStockDailyStat> getSymbolStatBetween(String tsCode, Date startDate, Date endDate){
+        CnStockDailyStatExample example = new CnStockDailyStatExample();
+        example.createCriteria().andSymbolEqualTo(tsCode).andTradeDateBetween(startDate, endDate);
+        example.setOrderByClause("trade_date asc");
+        List<CnStockDailyStat> statList = dailyStatMapper.selectByExample(example);
+        return statList;
     }
 
     public List<CnStockDailyStat> getSymbolStat(String tsCode, int limit){

@@ -76,13 +76,21 @@ public class JobActors {
                 return;
             }
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, taoData);
-            List<QuaintFilterDto> findList = indicatorCalc.quaintFilter(dataDate);
+            List<QuaintFilterDto> findList = indicatorCalc.quaintDailyFilter(dataDate);
             QuaintDailyFilterDto quaintDailyFilterDto = new QuaintDailyFilterDto();
             quaintDailyFilterDto.setQuaintList(findList);
+            findList = indicatorCalc.quaintStatFilter(dataDate);
+            if(findList != null){
+                quaintDailyFilterDto.getQuaintList().addAll(findList);
+            }
+            int size = 0;
+            if(quaintDailyFilterDto.getQuaintList() != null) {
+                size = quaintDailyFilterDto.getQuaintList().size();
+            }
             quaintDailyFilterDto.setTradeDate(DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dataDate));
             taoData.updateQuaintFilter(quaintDailyFilterDto);
             stockDao.updateDeltaDate(TaoConstants.FIND_DATE, dataDate);
-            log.info("Find day={}, finish:{}",DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dataDate), findList.size());
+            log.info("Find day={}, finish:{}",DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, dataDate), size);
         }catch (Throwable t){
             log.warn("Exceptions:", t);
         }
@@ -123,6 +131,7 @@ public class JobActors {
         List<QuaintTradingDto> quaintList = stockDao.getQuaintTradingList(lowDate, QuaintTradingStatus.BUY.getStatus());
         lowDate = DateHelper.beforeNDays(lastDate, TaoConstants.MAX_QUAINT_BUY_DAY);
         List<QuaintTradingDto> findList = stockDao.getQuaintFindList(lowDate, QuaintTradingStatus.TRADING.getStatus());
+
         if(!CollectionUtils.isEmpty(quaintList)){
             log.info("quaintList:{}", quaintList.size());
             for(QuaintTradingDto dto:quaintList){
@@ -135,6 +144,7 @@ public class JobActors {
             log.info("findList:{}", findList.size());
             for(QuaintTradingDto dto:findList){
                 dto.setName(taoData.getStockName(dto.getTsCode()));
+                quaintList.add(dto);
             }
             taoData.updateQuaintTradingList(findList);
         }

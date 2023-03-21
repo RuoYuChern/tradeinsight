@@ -67,13 +67,18 @@ public class Tao {
     @GetMapping({"/rebound"})
     public String rebound(@RequestParam(name="tradeDate", required = false) String tradeDate,
                           @RequestParam(name="pageNum", required = false) Integer pageNum,
+                          @RequestParam(name="signal", required = false) String signal,
                           Model model){
         if(pageNum == null){
             pageNum = Integer.valueOf(1);
         }
-        Pair<Integer, QuaintDailyFilterDto> listPair = taoData.getQuaintFilter(tradeDate, pageNum, 50);
+        if(!StringUtils.hasLength(signal)){
+            signal = "BUY";
+        }
+        Pair<Integer, QuaintDailyFilterDto> listPair = taoData.getQuaintFilter(tradeDate, signal, pageNum, 50);
         QuaintDailyFilterDto dailyFilterDto = listPair.getRight();
         model.addAttribute("queryDate", tradeDate);
+        model.addAttribute("signal", signal);
         model.addAttribute("tradeDate", dailyFilterDto.getTradeDate());
         if(!CollectionUtils.isEmpty(dailyFilterDto.getQuaintList())) {
             if (dailyFilterDto.getQuaintList().size() > 25) {

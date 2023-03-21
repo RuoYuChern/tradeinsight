@@ -12,9 +12,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MarketFilterChain {
     private static final int WINDOW_SIZE = 250;
+    private static final int STAT_SIZE = 10;
     private List<QFilter> filterList;
     public static int getWindowSize(){
         return WINDOW_SIZE;
+    }
+    public static int getStatSize(){
+        return STAT_SIZE;
     }
     public String getName(int code){
         for(QFilter qf:filterList){

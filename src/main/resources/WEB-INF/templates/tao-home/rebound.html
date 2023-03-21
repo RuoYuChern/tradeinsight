@@ -16,18 +16,18 @@
     <nav aria-label="rebound-navigation">
         <ul class="pagination justify-content-end">
             <li th:class="${pageNum == 1}? 'page-item disabled' : 'page-item' ">
-                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1},tradeDate=${queryDate})}">上一页</a>
-                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1})}">上一页</a>
+                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1},signal=${signal},tradeDate=${queryDate})}">上一页</a>
+                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum - 1},signal=${signal})}">上一页</a>
             </li>
             <th:block th:if="${totalPage > 0}">
                 <th:block th:each="page: ${#numbers.sequence(1, totalPage)}">
-                    <li th:if="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page},tradeDate=${queryDate})}" th:text="${page}"></a></li>
-                    <li th:unless="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page})}" th:text="${page}"></a></li>
+                    <li th:if="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page},signal=${signal},tradeDate=${queryDate})}" th:text="${page}"></a></li>
+                    <li th:unless="${queryDate != null}" class="page-item"><a class="page-link" th:href="@{/rebound(pageNum=${page},signal=${signal})}" th:text="${page}"></a></li>
                 </th:block>
             </th:block>
             <li th:class="${pageNum < totalPage}? 'page-item' : 'page-item disabled' ">
-                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1},tradeDate=${queryDate})}">上一页</a>
-                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1})}">下一页</a>
+                <a th:if="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1},signal=${signal},tradeDate=${queryDate})}">上一页</a>
+                <a th:unless="${queryDate != null}" class="page-link" th:href="@{/rebound(pageNum=${pageNum + 1},signal=${signal})}">下一页</a>
             </li>
         </ul>
     </nav>
