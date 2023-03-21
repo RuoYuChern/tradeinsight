@@ -29,6 +29,9 @@ public class WMA_TAT implements QStatFilter {
         CnStockDailyStat end = stockList.get(stockList.size() - 1);
         BigDecimal rate = end.getWmaPrice().divide(first.getWmaPrice(), 2, RoundingMode.HALF_DOWN);
         if(rate.compareTo(BUY_RATE) >= 0){
+            if(end.getPrice().compareTo(end.getWmaPrice()) < 0){
+                return QFilter.NO;
+            }
             /**上升***/
             CnStockDailyStat pre = null;
             for(CnStockDailyStat cure: stockList){
@@ -49,6 +52,9 @@ public class WMA_TAT implements QStatFilter {
             return result;
         }
         if(rate.compareTo(SELL_RATE) <= 0){
+            if(end.getPrice().compareTo(end.getWmaPrice()) > 0){
+                return QFilter.NO;
+            }
             /**下降**/
             CnStockDailyStat pre = null;
             for(CnStockDailyStat cure: stockList){
