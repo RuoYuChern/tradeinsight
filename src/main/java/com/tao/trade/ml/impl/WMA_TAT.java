@@ -11,7 +11,6 @@ import java.math.RoundingMode;
 import java.util.List;
 
 public class WMA_TAT implements QStatFilter {
-    private final static int TAIL_SIZE = 5;
     private final static BigDecimal BUY_RATE = new BigDecimal("1.08");
     private final static BigDecimal SELL_RATE = new BigDecimal("0.90");
     private final int windowSize;

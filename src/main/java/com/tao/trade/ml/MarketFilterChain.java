@@ -3,6 +3,7 @@ package com.tao.trade.ml;
 import com.tao.trade.facade.MarketSignal;
 import com.tao.trade.infra.db.model.CnStockDaily;
 import com.tao.trade.ml.impl.ADX_TAT;
+import com.tao.trade.ml.impl.BotUp;
 import com.tao.trade.ml.impl.SMA653CC;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class MarketFilterChain {
         filterList = new LinkedList<>();
         AtomicInteger num = new AtomicInteger(0);
         filterList.add(new SMA653CC(num.incrementAndGet()));
-        filterList.add(new ADX_TAT(num.incrementAndGet()));
+        filterList.add(new BotUp(num.incrementAndGet()));
     }
     public List<FilterResult> filter(List<CnStockDaily> stockList){
         List<FilterResult> resultList = new ArrayList<>(filterList.size());

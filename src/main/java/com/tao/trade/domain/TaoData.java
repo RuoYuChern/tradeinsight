@@ -73,13 +73,18 @@ public class TaoData {
         tradingDto.setStrategy(quaintDto.getStrategy());
         tradingDto.setStatus(QuaintTradingStatus.TRADING.getStatus());
         tradingDto.setAlterDate(new Date());
-        tradingDto.setPrice(quaintDto.getPrice());
-        taoDao.insertQuaintFind(tradingDto);
-        synchronized (this){
-            if(quaintTradingList.get() == null){
-                quaintTradingList.set(new LinkedList<>());
+        SinaRealVo realVo = sinaClient.getSingle(tsCode);
+        if(realVo != null) {
+            tradingDto.setPrice(realVo.getCurePrice());
+            taoDao.insertQuaintFind(tradingDto);
+            synchronized (this){
+                if(quaintTradingList.get() == null){
+                    quaintTradingList.set(new LinkedList<>());
+                }
+                quaintTradingList.get().add(tradingDto);
             }
-            quaintTradingList.get().add(tradingDto);
+        }else{
+            throw new RuntimeException(String.format("Can not find such stock:%s price", quaintDto.getStock()));
         }
     }
 

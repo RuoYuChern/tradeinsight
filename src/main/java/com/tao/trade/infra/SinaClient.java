@@ -52,6 +52,35 @@ public class SinaClient {
         return null;
     }
 
+    public SinaRealVo getSingle(String stock){
+        String sz = to(stock);
+        HttpUrl.Builder builder = HttpUrl.parse(String.format("%s/list=%s", REAL_URL, sz)).newBuilder();
+        Request req = new Request.Builder().addHeader("Referer", "http://finance.sina.com.cn").url(builder.build()).build();
+        try {
+            Response rsp = client.newCall(req).execute();
+            String values = rsp.body().string().replace("\n", "");
+            if(!StringUtils.hasLength(values)){
+                return null;
+            }
+            System.out.println("values:" + values);
+            String [] stockPrices = values.split(";");
+            for(String p:stockPrices){
+                if(StringUtils.hasLength(p)) {
+                    SinaRealVo vo = from(p);
+                    String tsCode = getTsCode(p);
+                    if(StringUtils.hasLength(tsCode)) {
+                        vo.setTsCode(tsCode);
+                        return vo;
+                    }
+                }
+            }
+        }catch (Throwable t){
+            t.printStackTrace();
+            log.info("getReal exceptions:", t);
+        }
+        return null;
+    }
+
     public List<SinaRealVo> getReal(List<String> stocks){
         StringBuilder sb = new StringBuilder();
         for(String st:stocks){

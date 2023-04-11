@@ -174,7 +174,6 @@ public class IndicatorCalc{
                 continue;
             }
             StringBuilder sb = new StringBuilder();
-            boolean isFirst = true;
             sb.append("[");
             sb.append("{").append("\"name\":\"");
             sb.append(result.getName()).append("\",");

@@ -172,7 +172,7 @@ public class JobActors {
 
     private boolean handleDelta(){
         try{
-            log.info("schedule start");
+            log.debug("schedule start");
             lock.lock();
             if(DateHelper.isHourBefore(17)){
                 isDeltaDone = false;
@@ -221,7 +221,7 @@ public class JobActors {
             log.info("schedule:", t);
             return false;
         }finally {
-            log.info("schedule unlock");
+            log.debug("schedule unlock");
             lock.unlock();
         }
     }

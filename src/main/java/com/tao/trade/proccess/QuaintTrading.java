@@ -66,6 +66,7 @@ public class QuaintTrading {
         }
         BigDecimal buyPrice = BUY_RATE.multiply(quaint.getPrice());
         if(buyPrice.compareTo(realVo.getCurePrice()) > 0){
+            log.info("TsCode:{} buy price={} is big than cure price={}", quaint.getTsCode(), buyPrice, realVo.getCurePrice());
             quaint.setBuyPrice(realVo.getCurePrice());
             quaint.setStatus(QuaintTradingStatus.BUY.getStatus());
             quaint.setBuyDate(new Date());
@@ -91,8 +92,11 @@ public class QuaintTrading {
             return;
         }
         BigDecimal sellPrice = SELL_RATE.multiply(quaint.getPrice());
+        int dayDiffs = DateHelper.daysDiff(new Date(), quaint.getBuyDate());
         if((realVo.getCurePrice().compareTo(sellPrice) >= 0)
-                || (DateHelper.daysDiff(new Date(), quaint.getBuyDate()) >= TaoConstants.MAX_QUAINT_SELL_DAY)){
+                || (dayDiffs >= TaoConstants.MAX_QUAINT_SELL_DAY)){
+            log.info("TsCode: {}, cure price ={} > sellPrice={} or days diff={} > {}", quaint.getTsCode(),
+                    realVo.getCurePrice(), sellPrice, dayDiffs, TaoConstants.MAX_QUAINT_SELL_DAY);
             quaint.setSellPrice(realVo.getCurePrice());
             quaint.setStatus(QuaintTradingStatus.SELL.getStatus());
             quaint.setSellDate(new Date());
