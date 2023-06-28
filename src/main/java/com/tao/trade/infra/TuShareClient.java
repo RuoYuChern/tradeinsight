@@ -116,7 +116,7 @@ public class TuShareClient {
         limiter.acquire(1);
         TuShareRspDto rsp = api.get(reqDto);
         if(rsp.getCode() != 0) {
-            log.info("reqId:{}, code:{}", rsp.getRequest_id(), rsp.getCode());
+            log.info("reqId:{}, code:{}:{}", rsp.getRequest_id(), rsp.getCode(), rsp.getMsg());
             return null;
         }
         TuShareDataDto dto = rsp.getData();

@@ -157,8 +157,6 @@ public class JobActors {
                 log.info("{} is not exist", TaoConstants.DATA_DATE);
                 return;
             }
-            List<StockBasicVo> basicVoList = Help.tryCall(()->tuShareClient.stock_basic("L"));
-            taoData.updateBasic(basicVoList);
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, taoData);
             CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
             taoData.updateUpDownTop(cnDownTopDto);
@@ -202,6 +200,10 @@ public class JobActors {
             }
             /**判断是否节假日**/
             List<StockBasicVo> basicVoList = tuShareClient.stock_basic("L");
+            if (basicVoList == null){
+                log.info("stock_basic failed");
+                return false;
+            }
             taoData.updateBasic(basicVoList);
             DataFetcher dataFetcher = new DataFetcher(stockDao, tuShareClient, taoData);
             String strStart = DateHelper.dateToStr(TaoConstants.TU_DATE_FMT, cureStartDate);

@@ -264,6 +264,12 @@ public class CnStockDao {
             return null;
         }
     }
+    public List<CnStockInfo> findStockByStatus(String status){
+        CnStockInfoExample example = new CnStockInfoExample();
+        example.createCriteria().andStatusEqualTo(status);
+        List<CnStockInfo> list = stockInfoMapper.selectByExample(example);
+        return list;
+    }
 
     public List<CnStockDailyStat> getSymbolStatBetween(String tsCode, Date startDate, Date endDate){
         CnStockDailyStatExample example = new CnStockDailyStatExample();
