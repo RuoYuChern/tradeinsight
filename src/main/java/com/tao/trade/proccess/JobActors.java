@@ -3,8 +3,10 @@ package com.tao.trade.proccess;
 import com.tao.trade.domain.TaoData;
 import com.tao.trade.facade.*;
 import com.tao.trade.infra.CnStockDao;
+import com.tao.trade.infra.DtoConvert;
 import com.tao.trade.infra.SinaClient;
 import com.tao.trade.infra.TuShareClient;
+import com.tao.trade.infra.db.model.CnStockInfo;
 import com.tao.trade.infra.vo.QuaintTradingStatus;
 import com.tao.trade.infra.vo.StockBasicVo;
 import com.tao.trade.utils.DateHelper;
@@ -17,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
@@ -157,6 +160,13 @@ public class JobActors {
                 log.info("{} is not exist", TaoConstants.DATA_DATE);
                 return;
             }
+            List<CnStockInfo> stockList = stockDao.findStockByStatus("L");
+            List<StockBasicVo> basicVoList = new LinkedList<>();
+            for(CnStockInfo info :stockList){
+                StockBasicVo vo = DtoConvert.INSTANCE.toBasic(info);
+                basicVoList.add(vo);
+            }
+            taoData.updateBasic(basicVoList);
             IndicatorCalc indicatorCalc = new IndicatorCalc(stockDao, tuShareClient, taoData);
             CnDownTopDto cnDownTopDto = indicatorCalc.getDayDownUpTop(lastDate);
             taoData.updateUpDownTop(cnDownTopDto);

@@ -18,6 +18,11 @@ public interface DtoConvert {
     @Mapping(source = "listDate", target = "listDate", dateFormat="yyyyMMdd")
     CnStockInfo fromBasic(StockBasicVo basicVo);
 
+    @Mapping(source = "symbol", target = "tsCode")
+    @Mapping(source = "status", target = "listStatus")
+    @Mapping(source = "listDate", target = "listDate", dateFormat="yyyyMMdd")
+    StockBasicVo toBasic(CnStockInfo info);
+
     @Mapping(source = "open", target = "openPrice")
     @Mapping(source = "close", target = "closePrice")
     @Mapping(source = "high", target = "highPrice")
